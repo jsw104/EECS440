@@ -16,8 +16,9 @@ class DTree:
         self.maxDepth = maxDepth
         self.useInformationGain = useInformationGain
 
+#example: python dtree /../testData/spam/spam 1 0 1
 def parseCommandLineToTree():
-    #the first argument is the name of the script.
+    #the first argument is technically the name of the script so we need 5 args for 4 options.
     if (len(sys.argv) is not 5):
         raise ValueError('You must run with 4 options.')
     dataPath = sys.argv[1]
