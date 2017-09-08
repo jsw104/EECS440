@@ -1,0 +1,4 @@
+This week we explored how to use the provided mldata.py code and used that code
+to parse the data and names files. We also wrote the command-line argument parsing logic
+and implemented the entropy calculations and most of the split selection logic (all 
+of which will need to be moved to a function invoked recursively for next week).
