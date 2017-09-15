@@ -3,6 +3,8 @@ import os
 from mldata import *
 import entropy
 from internalnode import *
+from continiousAttributeSplitFinder import *
+from leafnode import *
 
 class DTree:
     def __init__(self, dataPath, noCrossValidation, maxDepth, useInformationGain):
@@ -23,25 +25,73 @@ def parseCommandLineToTree():
         raise ValueError('You must run with 4 options.')
     dataPath = sys.argv[1]
     noCrossValidation = sys.argv[2]
-    maxDepth = sys.argv[3]
+    maxDepth = int(sys.argv[3])
+    if maxDepth == 0: #If the arg is 0, we want to grow the full tree
+        maxDepth = -1 #But it's more convenient to represent this as a -1 internally
     useInformationGain = sys.argv[4]
 
     return DTree(dataPath, noCrossValidation, maxDepth, useInformationGain)
+ 
+
+def buildTree(examples, schema, possibleSplitNodes, depthRemaining, parentMajorityClass):
+    initialClassLabelEntropy = entropy.entropy_class_label(examples)
     
+    #Check for empty node
+    if len(examples) == 0:
+        return LeafNode(parentMajorityClass, 0.0) #Base Case
         
-dtree = parseCommandLineToTree()
+    majorityClass, majorityClassFraction = entropy.majority_class(examples)
+        
+    #Check for pure node
+    if initialClassLabelEntropy == 0:
+        classLabel = examples[0].features[-1]
+        return LeafNode(classLabel, 1.0) #Base Case
+    
+    #Check for no depth remaining
+    if depthRemaining == 0:
+        return LeafNode(majorityClass, majorityClassFraction) #Base Case
+    
+    #Of the the decision nodes we can choose, identify the one with the lowest entropy after splitting
+    bestNode = None
+    bestNodeEntropy = -1
+    bestNodeBinnedExamples = None
 
+    for possibleNode in possibleSplitNodes:
+        prospectiveEntropy, binnedExamples = possibleNode.analyzeSplit(examples)
+        if bestNodeEntropy < 0 or prospectiveEntropy < bestNodeEntropy:
+            bestNodeEntropy = prospectiveEntropy
+            bestNode = possibleNode
+            bestNodeBinnedExamples = binnedExamples
 
-
-### The following will eventually be put in a function and invoked recursively.
-### But first let's get the entropy calculations and split selection ironed down. 
-
-#Calculate Initial Entropy of Class Labels
-initialClassLabelEntropy = entropy.entropy_class_label(dtree.exampleSet)
+    #Check for no information gain
+    informationGain = initialClassLabelEntropy - bestNodeEntropy
+    if not (informationGain > 0):
+        return LeafNode(majorityClass, majorityClassFraction) #Base Case
+                    
+    print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [Entropy=' + str(bestNodeEntropy) + ']'
+     
+    #Add the child nodes corresponding to this choice
+    if depthRemaining > 0:
+        depthRemaining = depthRemaining - 1
+    
+    for bin in bestNodeBinnedExamples.keys():
+        newPossibleSplitNodes = list(possibleSplitNodes)
+        newPossibleSplitNodes.remove(bestNode)
+        #Recurse and add result as child node
+        bestNode.addChild(buildTree(bestNodeBinnedExamples[bin], schema, newPossibleSplitNodes, depthRemaining, majorityClass), bin)
+        
+    return bestNode
+        
+      
+        
+dtree = parseCommandLineToTree() 
 
 #Identify the possible candidate tests. We pre-construct all possible nodes we may
 # place in the tree for easier bookkeeping later.
 possibleNodes = []
+examples = dtree.exampleSet.examples
+possibleSplitFinder = ContiniousAttributeSplitFinder(examples, dtree.exampleSet.schema)
+
 for featureIndex in range(1,len(dtree.exampleSet.schema.features)-1):    
     feature = dtree.exampleSet.schema.features[featureIndex]
     
@@ -49,18 +99,10 @@ for featureIndex in range(1,len(dtree.exampleSet.schema.features)-1):
         possibleNodes.append(InternalNode(dtree.exampleSet.schema, featureIndex))
         
     elif feature.type is Feature.Type.CONTINUOUS:
-        #TODO
-        print 'CONTINUOUS features not yet implemented'
+        possibleSplitThresholds = possibleSplitFinder.findPossibleSplitValues(featureIndex)
+        for possibleSplitThreshold in possibleSplitThresholds:
+            possibleNodes.append(InternalNode(dtree.exampleSet.schema, featureIndex, possibleSplitThreshold))
 
-#Of the the decision nodes we can choose, identify the one with the lowest entropy after splitting
-bestNode = None
-bestNodeEntropy = -1
-for possibleNode in possibleNodes:
-    prospectiveEntropy, binnedExamples = possibleNode.analyzeSplit(dtree.exampleSet.examples)
-    if bestNodeEntropy < 0 or prospectiveEntropy < bestNodeEntropy:
-        bestNodeEntropy = prospectiveEntropy
-        bestNode = possibleNode
-        
-print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [Entropy=' + str(bestNodeEntropy) + ']'
+overallMajorityClass, overallMajorityClassFraction = entropy.majority_class(examples)
 
-#Add best node to tree here
+rootNode = buildTree(examples, dtree.exampleSet.schema, possibleNodes, dtree.maxDepth, overallMajorityClass)
