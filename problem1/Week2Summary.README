@@ -4,4 +4,4 @@ the recursion/base cases. We added a leaf node object and can now link
 the leaf and internal nodes together to make a tree.
 
 Debugging, performance optimization, cross-validation, and gain-ratio are
-the major remaining tasks for the third week.
+the major remaining tasks for the third week. 
