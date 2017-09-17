@@ -104,5 +104,4 @@ for featureIndex in range(1,len(dtree.exampleSet.schema.features)-1):
             possibleNodes.append(InternalNode(dtree.exampleSet.schema, featureIndex, possibleSplitThreshold))
 
 overallMajorityClass, overallMajorityClassFraction = entropy.majority_class(examples)
-
 rootNode = buildTree(examples, dtree.exampleSet.schema, possibleNodes, dtree.maxDepth, overallMajorityClass)
