@@ -33,20 +33,18 @@ def parseCommandLineToTree():
     return DTree(dataPath, noCrossValidation, maxDepth, useInformationGain)
 
 #if a child bin is continuous and we
-def removeUnnecessaryNodes(possibleSplitNodes, bestNode, bestNodeIndex, bin):
-    possibleSplitNodes.remove(bestNode)
+def removeUnnecessaryNodes(possibleSplitNodes, bestNode, bestNodeThresholdIndex, bin):
     if(bin == ">="):
-        i = bestNodeIndex - 1
-        while(possibleSplitNodes[i].featureIndex == bestNode.featureIndex):
-            possibleSplitNodes.remove(possibleSplitNodes[i])
-            i = i - 1
-        print(">= case")
+        bestNode.possibleSplitThresholds = possibleSplitThresholds[bestNodeThresholdIndex + 1:]
+        if(len(bestNode.possibleSplitThresholds) == 0):
+            possibleSplitNodes.remove(bestNode)
     elif(bin == "<"):
-        i = bestNodeIndex + 1
-        while(possibleSplitNodes[i].featureIndex == bestNode.featureIndex):
-            possibleSplitNodes.remove(possibleSplitNodes[i])
-            i = i + 1
-        print("< case")
+        bestNode.possibleSplitThresholds = possibleSplitThresholds[
+                                           :bestNodeThresholdIndex - len(bestNode.possibleSplitThresholds)]
+        if(len(bestNode.possibleSplitThresholds) == 0):
+            possibleSplitNodes.remove(bestNode)
+    else:
+        possibleSplitNodes.remove(bestNode)
 
 
 def buildTree(examples, schema, possibleSplitNodes, depthRemaining, parentMajorityClass):
@@ -69,20 +67,20 @@ def buildTree(examples, schema, possibleSplitNodes, depthRemaining, parentMajori
     
     #Of the the decision nodes we can choose, identify the one with the lowest entropy after splitting
     bestNode = None
-    bestNodeIndex = -1
     bestNodeEntropy = -1
     bestNodeBinnedExamples = None
+    bestThresholdIndex = -1
 
     for i in range(0, len(possibleSplitNodes)):
         if i % 100 == 0:
             print(i)
         possibleNode = possibleSplitNodes[i]
-        prospectiveEntropy, binnedExamples = possibleNode.analyzeSplit(examples)
+        prospectiveEntropy, binnedExamples, thresholdIndex = possibleNode.analyzeSplit(examples)
         if bestNodeEntropy < 0 or prospectiveEntropy < bestNodeEntropy:
             bestNodeEntropy = prospectiveEntropy
             bestNode = possibleNode
             bestNodeBinnedExamples = binnedExamples
-            bestNodeIndex = i
+            bestThresholdIndex = thresholdIndex
 
     #Check for no information gain
     informationGain = initialClassLabelEntropy - bestNodeEntropy
@@ -97,7 +95,7 @@ def buildTree(examples, schema, possibleSplitNodes, depthRemaining, parentMajori
 
     for bin in bestNodeBinnedExamples.keys():
         newPossibleSplitNodes = list(possibleSplitNodes)
-        removeUnnecessaryNodes(newPossibleSplitNodes, bestNode, bestNodeIndex, bin)
+        removeUnnecessaryNodes(newPossibleSplitNodes, bestNode, bestThresholdIndex, bin)
         #Recurse and add result as child node
         bestNode.addChild(buildTree(bestNodeBinnedExamples[bin], schema, newPossibleSplitNodes, depthRemaining, majorityClass), bin)
         
@@ -111,7 +109,7 @@ dtree = parseCommandLineToTree()
 # place in the tree for easier bookkeeping later.
 possibleNodes = []
 examples = dtree.exampleSet.examples
-possibleSplitFinder = ContiniousAttributeSplitFinder(examples, dtree.exampleSet.schema)
+possibleSplitFinder = ContiniousAttributeSplitFinder(dtree.exampleSet.schema)
 
 for featureIndex in range(1,len(dtree.exampleSet.schema.features)-1):    
     feature = dtree.exampleSet.schema.features[featureIndex]
@@ -120,9 +118,8 @@ for featureIndex in range(1,len(dtree.exampleSet.schema.features)-1):
         possibleNodes.append(InternalNode(dtree.exampleSet.schema, featureIndex))
         
     elif feature.type is Feature.Type.CONTINUOUS:
-        possibleSplitThresholds = possibleSplitFinder.findPossibleSplitValues(featureIndex)
-        for possibleSplitThreshold in possibleSplitThresholds:
-            possibleNodes.append(InternalNode(dtree.exampleSet.schema, featureIndex, possibleSplitThreshold))
+        possibleSplitThresholds = possibleSplitFinder.findPossibleSplitValues(examples, featureIndex)
+        possibleNodes.append(InternalNode(dtree.exampleSet.schema, featureIndex, possibleSplitThresholds))
 
 overallMajorityClass, overallMajorityClassFraction = entropy.majority_class(examples)
 rootNode = buildTree(examples, dtree.exampleSet.schema, possibleNodes, dtree.maxDepth, overallMajorityClass)

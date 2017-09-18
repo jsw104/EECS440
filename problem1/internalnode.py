@@ -1,13 +1,15 @@
 from mldata import *
 import entropy
+from continiousAttributeSplitFinder import *
+from boundary import *
 
 class InternalNode:
     
-    def __init__(self, schema, featureIndex, boundaryValue=None):
+    def __init__(self, schema, featureIndex, possibleSplitThresholds=None):
         self.parent = None
         self.schema = schema
         self.featureIndex = int(featureIndex)
-        self.boundaryValue = boundaryValue
+        self.possibleSplitThresholds = possibleSplitThresholds
         self.children = {}
     
     def setParent(self, parent):
@@ -15,18 +17,18 @@ class InternalNode:
         
     def addChild(self, childNode, testValue):
         self.children[testValue] = childNode
-        
+
     def analyzeSplit(self, examples):
         """
         Return the entropy of using the split on the examples and the resulting binned examples. Does not modify any attributes of self.
         """
-        binnedExamples = self.binExamples(examples)
+        binnedExamples, bestThresholdIndex = self.binExamples(examples)
             
         prospectiveEntropy = 0
         for featureValue in binnedExamples.keys():
             prospectiveEntropy = prospectiveEntropy + (float(len(binnedExamples[featureValue])) / len(examples)) * entropy.entropy_class_label(binnedExamples[featureValue])
-        
-        return prospectiveEntropy, binnedExamples
+
+        return prospectiveEntropy, binnedExamples, bestThresholdIndex
     
     def binExamples(self, examples):
         """
@@ -35,6 +37,7 @@ class InternalNode:
 
         feature = self.schema.features[self.featureIndex]
         binnedExamples = {}
+        bestThresholdIndex = -1
         
         if feature.type is Feature.Type.BINARY or feature.type is Feature.Type.NOMINAL:
             for featureValue in feature.values:
@@ -44,14 +47,33 @@ class InternalNode:
                 binnedExamples[example.features[self.featureIndex]].append(example)
     
         elif feature.type is Feature.Type.CONTINUOUS:
-            binnedExamples[">="] = ExampleSet(self.schema)
-            binnedExamples["<"] = ExampleSet(self.schema)
-            
+            possibleBoundaries = []
+
+            for threshold in self.possibleSplitThresholds:
+                possibleBoundaries.append(Boundary(threshold))
+
             for example in examples:
-                if float(example[self.featureIndex]) >= self.boundaryValue:
-                    binnedExamples[">="].append(example)
-                else:
-                    binnedExamples["<"].append(example)  
+                for possibleBoundary in possibleBoundaries:
+                    if float(example[self.featureIndex]) >= possibleBoundary.boundaryValue:
+                        possibleBoundary.greaterThanOrEqualExamples.append(example)
+                    else:
+                        possibleBoundary.lessThanExamples.append(example)
+
+            bestEntropy = -1
+            bestBoundary = None
+            for possibleBoundary in possibleBoundaries:
+                prospectiveEntropy = 0
+                prospectiveEntropy = prospectiveEntropy + (float(len(possibleBoundary.greaterThanOrEqualExamples)) / len(
+                    examples)) * entropy.entropy_class_label(possibleBoundary.greaterThanOrEqualExamples)
+                prospectiveEntropy = prospectiveEntropy + (float(len(possibleBoundary.lessThanExamples)) / len(
+                    examples)) * entropy.entropy_class_label(possibleBoundary.lessThanExamples)
+                if(bestEntropy < 0 or prospectiveEntropy < bestEntropy):
+                    bestEntropy = prospectiveEntropy
+                    bestBoundary = possibleBoundary
+                    bestThresholdIndex = possibleBoundaries.index(possibleBoundary)
+
+            binnedExamples[">="] = bestBoundary.greaterThanOrEqualExamples
+            binnedExamples["<"] = bestBoundary.lessThanExamples
         
-        return binnedExamples 
+        return binnedExamples, bestThresholdIndex
         
