@@ -31,11 +31,27 @@ def parseCommandLineToTree():
     useInformationGain = sys.argv[4]
 
     return DTree(dataPath, noCrossValidation, maxDepth, useInformationGain)
- 
+
+#if a child bin is continuous and we
+def removeUnnecessaryNodes(possibleSplitNodes, bestNode, bestNodeIndex, bin):
+    possibleSplitNodes.remove(bestNode)
+    if(bin == ">="):
+        i = bestNodeIndex - 1
+        while(possibleSplitNodes[i].featureIndex == bestNode.featureIndex):
+            possibleSplitNodes.remove(possibleSplitNodes[i])
+            i = i - 1
+        print(">= case")
+    elif(bin == "<"):
+        i = bestNodeIndex + 1
+        while(possibleSplitNodes[i].featureIndex == bestNode.featureIndex):
+            possibleSplitNodes.remove(possibleSplitNodes[i])
+            i = i + 1
+        print("< case")
+
 
 def buildTree(examples, schema, possibleSplitNodes, depthRemaining, parentMajorityClass):
     initialClassLabelEntropy = entropy.entropy_class_label(examples)
-    
+    print(len(possibleSplitNodes))
     #Check for empty node
     if len(examples) == 0:
         return LeafNode(parentMajorityClass, 0.0) #Base Case
@@ -53,15 +69,20 @@ def buildTree(examples, schema, possibleSplitNodes, depthRemaining, parentMajori
     
     #Of the the decision nodes we can choose, identify the one with the lowest entropy after splitting
     bestNode = None
+    bestNodeIndex = -1
     bestNodeEntropy = -1
     bestNodeBinnedExamples = None
 
-    for possibleNode in possibleSplitNodes:
+    for i in range(0, len(possibleSplitNodes)):
+        if i % 100 == 0:
+            print(i)
+        possibleNode = possibleSplitNodes[i]
         prospectiveEntropy, binnedExamples = possibleNode.analyzeSplit(examples)
         if bestNodeEntropy < 0 or prospectiveEntropy < bestNodeEntropy:
             bestNodeEntropy = prospectiveEntropy
             bestNode = possibleNode
             bestNodeBinnedExamples = binnedExamples
+            bestNodeIndex = i
 
     #Check for no information gain
     informationGain = initialClassLabelEntropy - bestNodeEntropy
@@ -73,10 +94,10 @@ def buildTree(examples, schema, possibleSplitNodes, depthRemaining, parentMajori
     #Add the child nodes corresponding to this choice
     if depthRemaining > 0:
         depthRemaining = depthRemaining - 1
-    
+
     for bin in bestNodeBinnedExamples.keys():
         newPossibleSplitNodes = list(possibleSplitNodes)
-        newPossibleSplitNodes.remove(bestNode)
+        removeUnnecessaryNodes(newPossibleSplitNodes, bestNode, bestNodeIndex, bin)
         #Recurse and add result as child node
         bestNode.addChild(buildTree(bestNodeBinnedExamples[bin], schema, newPossibleSplitNodes, depthRemaining, majorityClass), bin)
         

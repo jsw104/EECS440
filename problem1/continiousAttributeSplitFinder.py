@@ -7,8 +7,7 @@ class ContiniousAttributeSplitFinder:
         
     def findPossibleSplitValues(self, featureIndex):
         possibleSplitValues = []
-        featureValueCounter = {}        
-        
+        featureValueCounter = {}
         for example in self.examples:
             if example[featureIndex] not in featureValueCounter:
                 featureValueCounter[example[featureIndex]] = {}
