@@ -1,10 +1,12 @@
 import sys
 import os
+import copy
 from mldata import *
 import entropy
 from internalnode import *
 from continiousAttributeSplitFinder import *
 from leafnode import *
+import random
 from lib2to3.pytree import Leaf
 from copy import deepcopy
 
@@ -104,14 +106,19 @@ class DTree:
     def _removeUnnecessaryNodes(self, possibleSplitNodes, bestNode, bestNodeThresholdIndex, bin):
         if bestNode.featureType == Feature.Type.CONTINUOUS:
             if(bin == ">="):
-                bestNode.possibleSplitThresholds = possibleSplitThresholds[bestNodeThresholdIndex + 1:]
-                if(len(bestNode.possibleSplitThresholds) == 0):
-                    possibleSplitNodes.remove(bestNode)
+                bestNodeCopy = copy.deepcopy(bestNode)
+                bestNodeCopy.possibleSplitThresholds = list(bestNode.possibleSplitThresholds[bestNodeThresholdIndex + 1:])
+                possibleSplitNodes.remove(bestNode)
+                if(len(bestNodeCopy.possibleSplitThresholds) > 0):
+                    possibleSplitNodes.append(bestNodeCopy)
             elif(bin == "<"):
-                bestNode.possibleSplitThresholds = possibleSplitThresholds[
-                                                   :bestNodeThresholdIndex - len(bestNode.possibleSplitThresholds)]
-                if(len(bestNode.possibleSplitThresholds) == 0):
-                    possibleSplitNodes.remove(bestNode)
+                bestNodeCopy = copy.deepcopy(bestNode)
+                bestNodeCopy.possibleSplitThresholds = list(bestNode.possibleSplitThresholds[
+                                                   :bestNodeThresholdIndex - len(bestNode.possibleSplitThresholds)])
+                possibleSplitNodes.remove(bestNode)
+                if(len(bestNodeCopy.possibleSplitThresholds) > 0):
+                    possibleSplitNodes.append(bestNodeCopy)
+
         else:
             possibleSplitNodes.remove(bestNode)
     
