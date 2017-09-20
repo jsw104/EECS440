@@ -46,6 +46,23 @@ class DTree:
         overallMajorityClass, overallMajorityClassFraction = entropy.majority_class(self.examples)
         self.rootNode = self._buildTree(self.examples, self.schema, possibleNodes, self.maxDepth, overallMajorityClass)
     
+    def evaluateExamples(self, examples):
+        numCorrect = 0
+        for example in examples:
+            node = self.rootNode
+            while hasattr(node, 'children'):
+                featureValue = example.features[node.featureIndex]
+                if node.featureType == Feature.Type.BINARY or node.featureType == Feature.Type.NOMINAL:
+                    node = node.children[featureValue]
+                
+                elif node.featureType == Feature.Type.CONTINUOUS:
+                    print 'TODO'
+            
+            if example.features[-1] == node.classLabel:
+                numCorrect = numCorrect + 1
+        
+        return float(numCorrect)/len(examples)
+    
     def countNodes(self):
         if self.rootNode == None:
             return 0
@@ -188,7 +205,7 @@ def parseCommandLineToTree():
 #MAIN        
 dtree = parseCommandLineToTree()
 print '======'
-print 'Accuracy: ' + '!!!! TODO !!!!'
+print 'Accuracy: ' + '!!!! TODO !!!!' #See work started in Dtree.evaluateExamples()
 print 'Size: ' + str(dtree.countNodes()[0]) #Not counting leaf nodes
 print 'Maximum Depth: ' + str(dtree.findMaxDepth())
 print 'First Feature: ' + str(dtree.getFirstFeatureName())
