@@ -1,28 +1,37 @@
 import math
 import mldata
 
-def entropy_class_label(exampleSet):
+def entropy_attribute(examples, attributeIndex):
     """
-    Compute the class label entropy of the example set
+    Compute the entropy of the attribute with the specified attributeIndex for the example set
     """
-
-    label_counts = {}
-    for example in exampleSet:
+    attr_counts = {}
+    for example in examples:
         if example is not None and len(example) > 0:
-            label = str(example[-1])
-            if(label not in label_counts):
-                label_counts[label] = 1
+            attr = str(example[attributeIndex])
+            if(attr not in attr_counts):
+                attr_counts[attr] = 1
             else:
-                label_counts[label] = label_counts[label] + 1
+                attr_counts[attr] = attr_counts[attr] + 1
     
     entropy = 0
                 
-    for label in label_counts:
-        label_count = label_counts[label]
-        p = float(label_count)/len(exampleSet)
+    for attr in attr_counts:
+        attr_count = attr_counts[attr]
+        p = float(attr_count)/len(examples)
         entropy = entropy + (p * math.log(p,2))  
             
     return -1 * entropy
+
+def entropy_class_label(examples):
+    """
+    Compute the class label entropy of the example set, which is the last atrribute
+    """
+    if len(examples) == 0:
+        return 0
+
+    return entropy_attribute(examples, len(examples[0])-1)
+    
 
 """Find the majority class"""
 def majority_class(examples):

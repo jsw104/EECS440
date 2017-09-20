@@ -9,14 +9,18 @@ class InternalNode:
         self.parent = None
         self.schema = schema
         self.featureIndex = int(featureIndex)
+        self.featureType = self.schema.features[self.featureIndex].type
         self.possibleSplitThresholds = possibleSplitThresholds
+        self.chosenThresholdIndex = None
         self.children = {}
     
     def setParent(self, parent):
         self.parent = parent
         
-    def addChild(self, childNode, testValue):
-        self.children[testValue] = childNode
+    def addChild(self, childNode, key):
+        if key in self.children.keys():
+            print 'Uh Oh, we are going to overwrite ' + str(self.children[key]) + ' with ' + str(childNode)
+        self.children[key] = childNode
 
     def analyzeSplit(self, examples):
         """
@@ -28,7 +32,9 @@ class InternalNode:
         for featureValue in binnedExamples.keys():
             prospectiveEntropy = prospectiveEntropy + (float(len(binnedExamples[featureValue])) / len(examples)) * entropy.entropy_class_label(binnedExamples[featureValue])
 
-        return prospectiveEntropy, binnedExamples, bestThresholdIndex
+        attributeEntropy = entropy.entropy_attribute(examples, self.featureIndex)
+        
+        return prospectiveEntropy, attributeEntropy, binnedExamples, bestThresholdIndex
     
     def binExamples(self, examples):
         """
@@ -43,7 +49,7 @@ class InternalNode:
             for featureValue in feature.values:
                 binnedExamples[featureValue] = ExampleSet(self.schema)
                 
-            for example in examples:
+            for example in examples: 
                 binnedExamples[example.features[self.featureIndex]].append(example)
     
         elif feature.type is Feature.Type.CONTINUOUS:
