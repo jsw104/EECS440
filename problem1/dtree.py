@@ -12,7 +12,7 @@ from copy import deepcopy
 
 class DTree:
 
-    def __init__(self, dataPath, noCrossValidation, maxDepth, useInformationGain):
+    def __init__(self, dataPath, useCrossValidation, maxDepth, useInformationGain):
         self.totalNodesCounter = 0
 
         if type(dataPath) is not str:
@@ -22,14 +22,18 @@ class DTree:
 
         #self.exampleSet = parse_c45(fileName, rootDirectory)
         exampleSet = parse_c45(fileName, rootDirectory)
-        
-        self.examples = exampleSet.examples
+
         self.schema = exampleSet.schema
-        self.useCrossValidation = not noCrossValidation
+        self.useCrossValidation = useCrossValidation
         self.maxDepth = maxDepth
         self.useInformationGain = useInformationGain
         self.rootNode = None
-        
+
+        self.examples = exampleSet.examples
+
+        if self.useCrossValidation:
+            foldArray = self.constructFolds(self.examples)
+
         #Identify the possible candidate tests. We pre-construct all possible nodes we may
         # place in the tree for easier bookkeeping later.
         possibleNodes = []
@@ -64,7 +68,30 @@ class DTree:
                 numCorrect = numCorrect + 1
         
         return float(numCorrect)/len(examples)
-    
+
+    def constructFolds(self, examples):
+        trueClassificationArray, falseClassificationArray = self.partitionByClass(examples)
+        random.seed(12345)
+        random.shuffle(trueClassificationArray)
+        random.shuffle(falseClassificationArray)
+        numberOfFolds = 5
+        foldArray = [None] * numberOfFolds
+        for i in range(0,numberOfFolds-1):
+            foldArray[i] = []
+            for j in range((len(trueClassificationArray) * i)/numberOfFolds , (len(trueClassificationArray) * (i+1))/numberOfFolds - 1):
+                foldArray[i].append(trueClassificationArray[j])
+            for j in range((len(falseClassificationArray) * i)/numberOfFolds , (len(falseClassificationArray) * (i+1))/numberOfFolds - 1):
+                foldArray[i].append(falseClassificationArray[j])
+        return foldArray
+
+    def partitionByClass(self, examples):
+        trueClassificationArray = []
+        falseClassificationArray = []
+        for example in examples:
+            trueClassificationArray.append(example) if (example[-1] == True) else falseClassificationArray.append(example)
+        return trueClassificationArray, falseClassificationArray
+
+
     def countNodes(self):
         if self.rootNode == None:
             return 0
@@ -201,13 +228,13 @@ def parseCommandLineToTree():
     if (len(sys.argv) is not 5):
         raise ValueError('You must run with 4 options.')
     dataPath = sys.argv[1]
-    noCrossValidation = int(sys.argv[2]) == 0
+    useCrossValidation = int(sys.argv[2]) == 0
     maxDepth = int(sys.argv[3])
     if maxDepth == 0: #If the arg is 0, we want to grow the full tree
         maxDepth = -1 #But it's more convenient to represent this as a -1 internally
     useInformationGain = int(sys.argv[4]) == 0
 
-    return DTree(dataPath, noCrossValidation, maxDepth, useInformationGain)        
+    return DTree(dataPath, useCrossValidation, maxDepth, useInformationGain)
       
 #MAIN        
 dtree = parseCommandLineToTree()
