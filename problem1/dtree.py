@@ -33,29 +33,41 @@ class DTree:
 
         if self.useCrossValidation:
             foldArray = self.constructFolds(self.examples)
+            for i in range(0, len(foldArray)):
+                testExamples = []
+                trainingExamples = []
+                testExamples = foldArray[i]
+                for j in range(0, len(foldArray)):
+                    if j != i:
+                        trainingExamples = trainingExamples + foldArray[j]
+                rootNode = self.createRootNode(trainingExamples)
+                self.evaluateExamples(rootNode, testExamples)
+        else:
+            self.createRootNode(self.examples)
 
-        #Identify the possible candidate tests. We pre-construct all possible nodes we may
+    def createRootNode(self, trainingExamples):
+        # Identify the possible candidate tests. We pre-construct all possible nodes we may
         # place in the tree for easier bookkeeping later.
         possibleNodes = []
         possibleSplitFinder = ContiniousAttributeSplitFinder(self.schema)
-        
-        for featureIndex in range(1,len(self.schema.features)-1):    
+
+        for featureIndex in range(1, len(self.schema.features) - 1):
             feature = self.schema.features[featureIndex]
-            
+
             if feature.type is Feature.Type.BINARY or feature.type is Feature.Type.NOMINAL:
                 possibleNodes.append(InternalNode(self.schema, featureIndex))
-                
+
             elif feature.type is Feature.Type.CONTINUOUS:
-                possibleSplitThresholds = possibleSplitFinder.findPossibleSplitValues(self.examples, featureIndex)
+                possibleSplitThresholds = possibleSplitFinder.findPossibleSplitValues(trainingExamples, featureIndex)
                 possibleNodes.append(InternalNode(self.schema, featureIndex, possibleSplitThresholds))
-        
-        overallMajorityClass, overallMajorityClassFraction = entropy.majority_class(self.examples)
-        self.rootNode = self._buildTree(self.examples, self.schema, possibleNodes, self.maxDepth, overallMajorityClass)
-    
-    def evaluateExamples(self, examples):
+
+        overallMajorityClass, overallMajorityClassFraction = entropy.majority_class(trainingExamples)
+        return self._buildTree(trainingExamples, self.schema, possibleNodes, self.maxDepth, overallMajorityClass)
+
+    def evaluateExamples(self, rootNode, examples):
         numCorrect = 0
         for example in examples:
-            node = self.rootNode
+            node = rootNode
             while hasattr(node, 'children'):
                 featureValue = example.features[node.featureIndex]
                 if node.featureType == Feature.Type.BINARY or node.featureType == Feature.Type.NOMINAL:
@@ -76,7 +88,7 @@ class DTree:
         random.shuffle(falseClassificationArray)
         numberOfFolds = 5
         foldArray = [None] * numberOfFolds
-        for i in range(0,numberOfFolds-1):
+        for i in range(0,numberOfFolds):
             foldArray[i] = []
             for j in range((len(trueClassificationArray) * i)/numberOfFolds , (len(trueClassificationArray) * (i+1))/numberOfFolds - 1):
                 foldArray[i].append(trueClassificationArray[j])
