@@ -43,10 +43,12 @@ def majority_class(examples):
         classCounter[example[-1]] = classCounter[example[-1]] + 1
             
     majorityClass = None
-    for classLabel in classCounter:
-        if majorityClass is None or classCounter[classLabel] > majorityClass:
+    majorityClassCount = 0
+    for classLabel, count in classCounter.items():
+        if majorityClassCount < count:
             majorityClass = classLabel
+            majorityClassCount = count
     
-    majorityClassFraction = float(classCounter[majorityClass]) / len(examples)
+    majorityClassFraction = majorityClassCount / len(examples)
             
     return majorityClass, majorityClassFraction

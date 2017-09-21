@@ -7,8 +7,6 @@ from internalnode import *
 from continiousAttributeSplitFinder import *
 from leafnode import *
 import random
-from lib2to3.pytree import Leaf
-from copy import deepcopy
 
 class DTree:
 
@@ -28,6 +26,7 @@ class DTree:
         self.maxDepth = maxDepth
         self.useInformationGain = useInformationGain
         self.rootNode = None
+        self.accuracy = 0
 
         self.examples = exampleSet.examples
 
@@ -41,10 +40,13 @@ class DTree:
                     if j != i:
                         trainingExamples = trainingExamples + foldArray[j]
                 rootNode = self.createRootNode(trainingExamples)
-                self.evaluateExamples(rootNode, testExamples)
+                self.accuracy = self.accuracy + self.evaluateExamples(rootNode, testExamples)
+            self.accuracy = self.accuracy/len(foldArray)
+            
         else:
-            self.createRootNode(self.examples)
-
+            self.rootNode = self.createRootNode(self.examples)
+            self.accuracy = self.evaluateExamples(self.rootNode, self.examples)
+            
     def createRootNode(self, trainingExamples):
         # Identify the possible candidate tests. We pre-construct all possible nodes we may
         # place in the tree for easier bookkeeping later.
@@ -74,7 +76,11 @@ class DTree:
                     node = node.children[featureValue]
                 
                 elif node.featureType == Feature.Type.CONTINUOUS:
-                    print 'TODO'
+                    splitThresh = node.possibleSplitThresholds[node.chosenThresholdIndex]
+                    if example[node.chosenThresholdIndex] >= splitThresh:
+                        node = node.children['>=']
+                    else:
+                        node = node.children['<']
             
             if example.features[-1] == node.classLabel:
                 numCorrect = numCorrect + 1
@@ -106,7 +112,7 @@ class DTree:
 
     def countNodes(self):
         if self.rootNode == None:
-            return 0
+            return 0, 0
         
         internalNodeCount = 0
         leafNodeCount = 0
@@ -251,7 +257,8 @@ def parseCommandLineToTree():
 #MAIN        
 dtree = parseCommandLineToTree()
 print '======'
-print 'Accuracy: ' + '!!!! TODO !!!!' #See work started in Dtree.evaluateExamples()
-print 'Size: ' + str(dtree.countNodes()[0]) #Not counting leaf nodes
+print 'Accuracy: ' + str(dtree.accuracy)
+countInternalNodes, countLeafNodes = dtree.countNodes()
+print 'Size: ' + str(countInternalNodes) #Not counting leaf nodes
 print 'Maximum Depth: ' + str(dtree.findMaxDepth())
 print 'First Feature: ' + str(dtree.getFirstFeatureName())
