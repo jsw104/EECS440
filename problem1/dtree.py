@@ -62,8 +62,7 @@ class DTree:
                 possibleNodes.append(InternalNode(self.schema, featureIndex))
 
             elif feature.type is Feature.Type.CONTINUOUS:
-                possibleSplitThresholds = possibleSplitFinder.findPossibleSplitValues(trainingExamples, featureIndex)
-                possibleNodes.append(InternalNode(self.schema, featureIndex, possibleSplitThresholds))
+                possibleNodes.append(InternalNode(self.schema, featureIndex))
 
         overallMajorityClass, overallMajorityClassFraction = entropy.majority_class(trainingExamples)
         return self._buildTree(trainingExamples, self.schema, possibleNodes, self.maxDepth, overallMajorityClass)
@@ -78,8 +77,7 @@ class DTree:
                     node = node.children[featureValue]
                 
                 elif node.featureType == Feature.Type.CONTINUOUS:
-                    splitThresh = node.possibleSplitThresholds[node.chosenThresholdIndex]
-                    if example[node.featureIndex] >= splitThresh:
+                    if example[node.featureIndex] >= node.boundaryValue:
                         node = node.children['>=']
                     else:
                         node = node.children['<']
@@ -152,25 +150,8 @@ class DTree:
         return self.rootNode.schema.features[self.rootNode.featureIndex].name
     
     #if a child bin is continuous and we
-    def _removeUnnecessaryNodes(self, possibleSplitNodes, bestNode, bestNodeThresholdIndex, bin):
-        if bestNode.featureType == Feature.Type.CONTINUOUS:
-            if(bin == ">="):
-                bestNodeCopy = copy.deepcopy(bestNode)
-                bestNodeCopy.possibleSplitThresholds = list(bestNode.possibleSplitThresholds[bestNodeThresholdIndex + 1:])
-                possibleSplitNodes.remove(bestNode)
-                #print 'removed ' + str(len(bestNode.possibleSplitThresholds) - len(bestNodeCopy.possibleSplitThresholds)) + ' thresholds from ' + str(bestNode.schema.features[bestNode.featureIndex].name)
-                if(len(bestNodeCopy.possibleSplitThresholds) > 0):
-                    possibleSplitNodes.append(bestNodeCopy)
-            elif(bin == "<"):
-                bestNodeCopy = copy.deepcopy(bestNode)
-                bestNodeCopy.possibleSplitThresholds = list(bestNode.possibleSplitThresholds[
-                                                   :bestNodeThresholdIndex - len(bestNode.possibleSplitThresholds)])
-                possibleSplitNodes.remove(bestNode)
-                #print 'removed ' + str(len(bestNode.possibleSplitThresholds) - len(bestNodeCopy.possibleSplitThresholds)) + ' thresholds from ' + str(bestNode.schema.features[bestNode.featureIndex].name)
-                if(len(bestNodeCopy.possibleSplitThresholds) > 0):
-                    possibleSplitNodes.append(bestNodeCopy)
-
-        else:
+    def _removeUnnecessaryNodes(self, possibleSplitNodes, bestNode):
+        if bestNode.featureType == Feature.Type.NOMINAL:
             possibleSplitNodes.remove(bestNode)
             #print 'removed ' + str(bestNode.schema.features[bestNode.featureIndex].name)
     
@@ -197,14 +178,14 @@ class DTree:
         bestNodeInformationGain = -1
         bestNodeGainRatio = -1
         bestNodeBinnedExamples = None
-        bestThresholdIndex = -1
-    
+        bestBoundaryValue = -1
+
         for i in range(0, len(possibleSplitNodes)):
             #if i % 50 == 0:
             #    print('i=' + str(i))
             possibleSplitNode = possibleSplitNodes[i]
             
-            splitClassLabelEntropy, attributeEntropy, binnedExamples, thresholdIndex = possibleSplitNode.analyzeSplit(examples)
+            splitClassLabelEntropy, attributeEntropy, binnedExamples, boundaryValue = possibleSplitNode.analyzeSplit(examples)
             informationGain = initialClassLabelEntropy - splitClassLabelEntropy
             
             if informationGain > 0 and attributeEntropy > 0:
@@ -217,15 +198,14 @@ class DTree:
                         bestNodeInformationGain = informationGain
                         bestNodeGainRatio = gainRatio
                         bestNodeBinnedExamples = binnedExamples
-                        bestThresholdIndex = thresholdIndex          
+                        bestBoundaryValue = boundaryValue
     
         #Check for no information gain
         if not (bestNodeInformationGain > 0):
             return LeafNode(majorityClass, majorityClassFraction) #Base Case
-        
-        cloneBestNodePossibleSplitThresholds = list(bestNode.possibleSplitThresholds) if bestNode.possibleSplitThresholds else None
-        cloneBestNode = InternalNode(bestNode.schema, bestNode.featureIndex, cloneBestNodePossibleSplitThresholds)
-        cloneBestNode.chosenThresholdIndex = bestThresholdIndex
+
+        cloneBestNode = InternalNode(bestNode.schema, bestNode.featureIndex)
+        cloneBestNode.boundaryValue = bestBoundaryValue
                         
         if self.useInformationGain:
             print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [InformationGain=' + str(bestNodeInformationGain) + '] ' + bestNode.schema.features[bestNode.featureIndex].type
@@ -238,7 +218,7 @@ class DTree:
     
         for bin, binnedExamples in bestNodeBinnedExamples.items():
             newPossibleSplitNodes = list(possibleSplitNodes)
-            self._removeUnnecessaryNodes(newPossibleSplitNodes, bestNode, bestThresholdIndex, bin)
+            self._removeUnnecessaryNodes(newPossibleSplitNodes, bestNode)
             
             #Recurse and add result as child node
             childNode = self._buildTree(binnedExamples, schema, newPossibleSplitNodes, depthRemaining, majorityClass)

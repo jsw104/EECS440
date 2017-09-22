@@ -5,13 +5,12 @@ from boundary import *
 
 class InternalNode:
     
-    def __init__(self, schema, featureIndex, possibleSplitThresholds=None):
+    def __init__(self, schema, featureIndex):
         self.parent = None
         self.schema = schema
         self.featureIndex = int(featureIndex)
         self.featureType = self.schema.features[self.featureIndex].type
-        self.possibleSplitThresholds = possibleSplitThresholds
-        self.chosenThresholdIndex = None
+        self.boundaryValue = None
         self.children = {}
     
     def setParent(self, parent):
@@ -26,7 +25,7 @@ class InternalNode:
         """
         Return the entropy of using the split on the examples and the resulting binned examples. Does not modify any attributes of self.
         """
-        binnedExamples, bestThresholdIndex = self.binExamples(examples)
+        binnedExamples, boundaryValue = self.binExamples(examples)
             
         prospectiveEntropy = 0
         for featureValue in binnedExamples.keys():
@@ -34,7 +33,7 @@ class InternalNode:
 
         attributeEntropy = entropy.entropy_attribute(examples, self.featureIndex)
         
-        return prospectiveEntropy, attributeEntropy, binnedExamples, bestThresholdIndex
+        return prospectiveEntropy, attributeEntropy, binnedExamples, boundaryValue
     
     def binExamples(self, examples):
         """
@@ -43,8 +42,8 @@ class InternalNode:
 
         feature = self.schema.features[self.featureIndex]
         binnedExamples = {}
-        bestThresholdIndex = -1
-        
+        bestSplitFeatureValue = -1
+
         if feature.type is Feature.Type.BINARY or feature.type is Feature.Type.NOMINAL:
             for featureValue in feature.values:
                 binnedExamples[featureValue] = []
@@ -53,39 +52,41 @@ class InternalNode:
                 binnedExamples[example.features[self.featureIndex]].append(example)
     
         elif feature.type is Feature.Type.CONTINUOUS:
-            possibleBoundaries = []
+            possibleSplitFinder = ContiniousAttributeSplitFinder(self.schema)
+            sortedFeatureValues, featureValueCounter = possibleSplitFinder.sortFeatureValues(examples, self.featureIndex)
+            currentBoundary = Boundary(sortedFeatureValues[0], len(examples))
+            for featureValue in sortedFeatureValues:
+                if True in featureValueCounter[featureValue]:
+                    currentBoundary.greaterThanTrueCount = currentBoundary.greaterThanTrueCount + featureValueCounter[featureValue][True]
+                if False in featureValueCounter[featureValue]:
+                    currentBoundary.greaterThanFalseCount = currentBoundary.greaterThanFalseCount + featureValueCounter[featureValue][False]
 
-            for threshold in self.possibleSplitThresholds:
-                possibleBoundaries.append(Boundary(threshold))
-            
+            bestSplitFeatureValueIndex = -1
             bestEntropy = -1
-            bestBoundary = None
-            for possibleBoundary in possibleBoundaries:
-                for example in examples:
-                    if float(example[self.featureIndex]) >= possibleBoundary.boundaryValue:
-                        possibleBoundary.greaterThanOrEqualExamples.append(example)
-                    else:
-                        possibleBoundary.lessThanExamples.append(example)
+            for featureValue in sortedFeatureValues:
+                trueCount = 0
+                falseCount = 0
+                if True in featureValueCounter[featureValue]:
+                    trueCount = featureValueCounter[featureValue][True]
+                if False in featureValueCounter[featureValue]:
+                    falseCount = featureValueCounter[featureValue][False]
+                currentBoundary.greaterThanTrueCount = currentBoundary.greaterThanTrueCount - trueCount
+                currentBoundary.greaterThanFalseCount = currentBoundary.greaterThanFalseCount - falseCount
+                currentBoundary.lessThanTrueCount = currentBoundary.lessThanTrueCount + trueCount
+                currentBoundary.lessThanFalseCount = currentBoundary.lessThanFalseCount + falseCount
+                currentEntropy = currentBoundary.calculateLessThanEntropy() + currentBoundary.calculateGreaterThanEntropy()
+                if (bestEntropy < 0 or currentEntropy < bestEntropy):
+                    bestEntropy = currentEntropy
+                    bestSplitFeatureValueIndex = sortedFeatureValues.index(featureValue)
 
-                prospectiveEntropy = 0
-                prospectiveEntropy = prospectiveEntropy + (float(len(possibleBoundary.greaterThanOrEqualExamples)) / len(
-                    examples)) * entropy.entropy_class_label(possibleBoundary.greaterThanOrEqualExamples)
-                prospectiveEntropy = prospectiveEntropy + (float(len(possibleBoundary.lessThanExamples)) / len(
-                    examples)) * entropy.entropy_class_label(possibleBoundary.lessThanExamples)
-                
-                if(bestEntropy < 0 or prospectiveEntropy < bestEntropy):
-                    if bestBoundary:
-                        bestBoundary.greaterThanOrEqualExamples = None
-                        bestBoundary.lessThanExamples = None
-                    bestEntropy = prospectiveEntropy
-                    bestBoundary = possibleBoundary
-                    bestThresholdIndex = possibleBoundaries.index(possibleBoundary)
+            bestSplitFeatureValue = sortedFeatureValues[bestSplitFeatureValueIndex + 1] if len(sortedFeatureValues) > bestSplitFeatureValueIndex + 1 else sortedFeatureValues[bestSplitFeatureValueIndex] + 1
+            binnedExamples[">="] = []
+            binnedExamples["<"] = []
+
+            for example in examples:
+                if example[self.featureIndex] >= bestSplitFeatureValue:
+                    binnedExamples[">="].append(example)
                 else:
-                    possibleBoundary.greaterThanOrEqualExamples = None
-                    possibleBoundary.lessThanExamples = None
-
-            binnedExamples[">="] = bestBoundary.greaterThanOrEqualExamples
-            binnedExamples["<"] = bestBoundary.lessThanExamples
-        
-        return binnedExamples, bestThresholdIndex
+                    binnedExamples["<"].append(example)
+        return binnedExamples, bestSplitFeatureValue
         
