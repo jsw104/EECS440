@@ -79,7 +79,7 @@ class DTree:
                 
                 elif node.featureType == Feature.Type.CONTINUOUS:
                     splitThresh = node.possibleSplitThresholds[node.chosenThresholdIndex]
-                    if example[node.chosenThresholdIndex] >= splitThresh:
+                    if example[node.featureIndex] >= splitThresh:
                         node = node.children['>=']
                     else:
                         node = node.children['<']
@@ -158,6 +158,7 @@ class DTree:
                 bestNodeCopy = copy.deepcopy(bestNode)
                 bestNodeCopy.possibleSplitThresholds = list(bestNode.possibleSplitThresholds[bestNodeThresholdIndex + 1:])
                 possibleSplitNodes.remove(bestNode)
+                #print 'removed ' + str(len(bestNode.possibleSplitThresholds) - len(bestNodeCopy.possibleSplitThresholds)) + ' thresholds from ' + str(bestNode.schema.features[bestNode.featureIndex].name)
                 if(len(bestNodeCopy.possibleSplitThresholds) > 0):
                     possibleSplitNodes.append(bestNodeCopy)
             elif(bin == "<"):
@@ -165,15 +166,17 @@ class DTree:
                 bestNodeCopy.possibleSplitThresholds = list(bestNode.possibleSplitThresholds[
                                                    :bestNodeThresholdIndex - len(bestNode.possibleSplitThresholds)])
                 possibleSplitNodes.remove(bestNode)
+                #print 'removed ' + str(len(bestNode.possibleSplitThresholds) - len(bestNodeCopy.possibleSplitThresholds)) + ' thresholds from ' + str(bestNode.schema.features[bestNode.featureIndex].name)
                 if(len(bestNodeCopy.possibleSplitThresholds) > 0):
                     possibleSplitNodes.append(bestNodeCopy)
 
         else:
             possibleSplitNodes.remove(bestNode)
+            #print 'removed ' + str(bestNode.schema.features[bestNode.featureIndex].name)
     
     def _buildTree(self, examples, schema, possibleSplitNodes, depthRemaining, parentMajorityClass):
         initialClassLabelEntropy = entropy.entropy_class_label(examples)
-        print('len(possibleSplitNodes)=' + str(len(possibleSplitNodes)))
+        #print('len(possibleSplitNodes)=' + str(len(possibleSplitNodes)))
         #Check for empty node
         if len(examples) == 0:
             return LeafNode(parentMajorityClass, 0.0) #Base Case
@@ -197,8 +200,8 @@ class DTree:
         bestThresholdIndex = -1
     
         for i in range(0, len(possibleSplitNodes)):
-            if i % 50 == 0:
-                print('i=' + str(i))
+            #if i % 50 == 0:
+            #    print('i=' + str(i))
             possibleSplitNode = possibleSplitNodes[i]
             
             splitClassLabelEntropy, attributeEntropy, binnedExamples, thresholdIndex = possibleSplitNode.analyzeSplit(examples)
@@ -220,13 +223,14 @@ class DTree:
         if not (bestNodeInformationGain > 0):
             return LeafNode(majorityClass, majorityClassFraction) #Base Case
         
-        cloneBestNode = InternalNode(bestNode.schema, bestNode.featureIndex, bestNode.possibleSplitThresholds)
-        cloneBestNode.chosenThresholdIndex = bestThresholdIndex 
+        cloneBestNodePossibleSplitThresholds = list(bestNode.possibleSplitThresholds) if bestNode.possibleSplitThresholds else None
+        cloneBestNode = InternalNode(bestNode.schema, bestNode.featureIndex, cloneBestNodePossibleSplitThresholds)
+        cloneBestNode.chosenThresholdIndex = bestThresholdIndex
                         
         if self.useInformationGain:
-            print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [InformationGain=' + str(bestNodeInformationGain) + ']'
+            print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [InformationGain=' + str(bestNodeInformationGain) + '] ' + bestNode.schema.features[bestNode.featureIndex].type
         else:
-            print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [GainRatio=' + str(bestNodeGainRatio) + ']' 
+            print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [GainRatio=' + str(bestNodeGainRatio) + '] ' + bestNode.schema.features[bestNode.featureIndex].type 
         
         #Add the child nodes corresponding to this choice
         if depthRemaining > 0:

@@ -47,7 +47,7 @@ class InternalNode:
         
         if feature.type is Feature.Type.BINARY or feature.type is Feature.Type.NOMINAL:
             for featureValue in feature.values:
-                binnedExamples[featureValue] = ExampleSet(self.schema)
+                binnedExamples[featureValue] = []
                 
             for example in examples: 
                 binnedExamples[example.features[self.featureIndex]].append(example)
@@ -74,6 +74,9 @@ class InternalNode:
                     examples)) * entropy.entropy_class_label(possibleBoundary.lessThanExamples)
                 
                 if(bestEntropy < 0 or prospectiveEntropy < bestEntropy):
+                    if bestBoundary:
+                        bestBoundary.greaterThanOrEqualExamples = None
+                        bestBoundary.lessThanExamples = None
                     bestEntropy = prospectiveEntropy
                     bestBoundary = possibleBoundary
                     bestThresholdIndex = possibleBoundaries.index(possibleBoundary)
