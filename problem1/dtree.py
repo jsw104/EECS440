@@ -11,7 +11,6 @@ import random
 class DTree:
 
     def __init__(self, dataPath, useCrossValidation, maxDepth, useInformationGain):
-        self.totalNodesCounter = 0
 
         if type(dataPath) is not str:
             raise ValueError('The data path must be a string')
@@ -239,7 +238,6 @@ class DTree:
             
             #Recurse and add result as child node
             childNode = self._buildTree(binnedExamples, schema, newPossibleSplitNodes, depthRemaining, majorityClass)
-            self.totalNodesCounter = self.totalNodesCounter + 1
             cloneBestNode.addChild(childNode, bin)          
               
         return cloneBestNode    

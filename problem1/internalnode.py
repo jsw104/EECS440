@@ -57,26 +57,29 @@ class InternalNode:
 
             for threshold in self.possibleSplitThresholds:
                 possibleBoundaries.append(Boundary(threshold))
-
-            for example in examples:
-                for possibleBoundary in possibleBoundaries:
+            
+            bestEntropy = -1
+            bestBoundary = None
+            for possibleBoundary in possibleBoundaries:
+                for example in examples:
                     if float(example[self.featureIndex]) >= possibleBoundary.boundaryValue:
                         possibleBoundary.greaterThanOrEqualExamples.append(example)
                     else:
                         possibleBoundary.lessThanExamples.append(example)
 
-            bestEntropy = -1
-            bestBoundary = None
-            for possibleBoundary in possibleBoundaries:
                 prospectiveEntropy = 0
                 prospectiveEntropy = prospectiveEntropy + (float(len(possibleBoundary.greaterThanOrEqualExamples)) / len(
                     examples)) * entropy.entropy_class_label(possibleBoundary.greaterThanOrEqualExamples)
                 prospectiveEntropy = prospectiveEntropy + (float(len(possibleBoundary.lessThanExamples)) / len(
                     examples)) * entropy.entropy_class_label(possibleBoundary.lessThanExamples)
+                
                 if(bestEntropy < 0 or prospectiveEntropy < bestEntropy):
                     bestEntropy = prospectiveEntropy
                     bestBoundary = possibleBoundary
                     bestThresholdIndex = possibleBoundaries.index(possibleBoundary)
+                else:
+                    possibleBoundary.greaterThanOrEqualExamples = None
+                    possibleBoundary.lessThanExamples = None
 
             binnedExamples[">="] = bestBoundary.greaterThanOrEqualExamples
             binnedExamples["<"] = bestBoundary.lessThanExamples
