@@ -11,14 +11,12 @@ import random
 class DTree:
 
     def __init__(self, dataPath, useCrossValidation, maxDepth, useInformationGain):
-        self.totalNodesCounter = 0
 
         if type(dataPath) is not str:
             raise ValueError('The data path must be a string')
         fileName = os.path.basename(dataPath)
         rootDirectory = os.path.join(os.path.dirname(os.path.realpath(__file__)), dataPath[1:-(len(fileName) + 1)])
 
-        #self.exampleSet = parse_c45(fileName, rootDirectory)
         exampleSet = parse_c45(fileName, rootDirectory)
 
         self.schema = exampleSet.schema
@@ -30,6 +28,11 @@ class DTree:
 
         self.examples = exampleSet.examples
 
+        #Build the tree using the full set of examples. The final tree is built the same
+        #way even if cross-validating to get a better accuracy estimate.
+        self.rootNode = self.createRootNode(self.examples)
+        
+        #Get accuracy estimate
         if self.useCrossValidation:
             foldArray = self.constructFolds(self.examples)
             for i in range(0, len(foldArray)):
@@ -39,12 +42,11 @@ class DTree:
                 for j in range(0, len(foldArray)):
                     if j != i:
                         trainingExamples = trainingExamples + foldArray[j]
-                rootNode = self.createRootNode(trainingExamples)
-                self.accuracy = self.accuracy + self.evaluateExamples(rootNode, testExamples)
+                foldTreeRootNode = self.createRootNode(trainingExamples)
+                self.accuracy = self.accuracy + self.evaluateExamples(foldTreeRootNode, testExamples)
             self.accuracy = self.accuracy/len(foldArray)
             
         else:
-            self.rootNode = self.createRootNode(self.examples)
             self.accuracy = self.evaluateExamples(self.rootNode, self.examples)
             
     def createRootNode(self, trainingExamples):
@@ -77,7 +79,7 @@ class DTree:
                 
                 elif node.featureType == Feature.Type.CONTINUOUS:
                     splitThresh = node.possibleSplitThresholds[node.chosenThresholdIndex]
-                    if example[node.chosenThresholdIndex] >= splitThresh:
+                    if example[node.featureIndex] >= splitThresh:
                         node = node.children['>=']
                     else:
                         node = node.children['<']
@@ -109,7 +111,6 @@ class DTree:
             trueClassificationArray.append(example) if (example[-1] == True) else falseClassificationArray.append(example)
         return trueClassificationArray, falseClassificationArray
 
-
     def countNodes(self):
         if self.rootNode == None:
             return 0, 0
@@ -133,13 +134,16 @@ class DTree:
     def findMaxDepth(self):
         if self.rootNode == None:
             return 0    
-        return self._findMaxDepth(self.rootNode)-1 #The leaf node doesn't count towards the depth
+        return self._findMaxDepth(self.rootNode)
             
     def _findMaxDepth(self, node):
         maxChildDepth = 0;
         if hasattr(node, 'children'):
             for key, child in node.children.items():
-                maxChildDepth = max(maxChildDepth, self._findMaxDepth(child))        
+                maxChildDepth = max(maxChildDepth, self._findMaxDepth(child))
+        else:
+            return 0  #Base Case; 0 since the leaf node doesn't count towards the depth
+                
         return maxChildDepth + 1
     
     def getFirstFeatureName(self):
@@ -154,6 +158,7 @@ class DTree:
                 bestNodeCopy = copy.deepcopy(bestNode)
                 bestNodeCopy.possibleSplitThresholds = list(bestNode.possibleSplitThresholds[bestNodeThresholdIndex + 1:])
                 possibleSplitNodes.remove(bestNode)
+                #print 'removed ' + str(len(bestNode.possibleSplitThresholds) - len(bestNodeCopy.possibleSplitThresholds)) + ' thresholds from ' + str(bestNode.schema.features[bestNode.featureIndex].name)
                 if(len(bestNodeCopy.possibleSplitThresholds) > 0):
                     possibleSplitNodes.append(bestNodeCopy)
             elif(bin == "<"):
@@ -161,15 +166,17 @@ class DTree:
                 bestNodeCopy.possibleSplitThresholds = list(bestNode.possibleSplitThresholds[
                                                    :bestNodeThresholdIndex - len(bestNode.possibleSplitThresholds)])
                 possibleSplitNodes.remove(bestNode)
+                #print 'removed ' + str(len(bestNode.possibleSplitThresholds) - len(bestNodeCopy.possibleSplitThresholds)) + ' thresholds from ' + str(bestNode.schema.features[bestNode.featureIndex].name)
                 if(len(bestNodeCopy.possibleSplitThresholds) > 0):
                     possibleSplitNodes.append(bestNodeCopy)
 
         else:
             possibleSplitNodes.remove(bestNode)
+            #print 'removed ' + str(bestNode.schema.features[bestNode.featureIndex].name)
     
     def _buildTree(self, examples, schema, possibleSplitNodes, depthRemaining, parentMajorityClass):
         initialClassLabelEntropy = entropy.entropy_class_label(examples)
-        print('len(possibleSplitNodes)=' + str(len(possibleSplitNodes)))
+        #print('len(possibleSplitNodes)=' + str(len(possibleSplitNodes)))
         #Check for empty node
         if len(examples) == 0:
             return LeafNode(parentMajorityClass, 0.0) #Base Case
@@ -193,8 +200,8 @@ class DTree:
         bestThresholdIndex = -1
     
         for i in range(0, len(possibleSplitNodes)):
-            if i % 50 == 0:
-                print('i=' + str(i))
+            #if i % 50 == 0:
+            #    print('i=' + str(i))
             possibleSplitNode = possibleSplitNodes[i]
             
             splitClassLabelEntropy, attributeEntropy, binnedExamples, thresholdIndex = possibleSplitNode.analyzeSplit(examples)
@@ -216,27 +223,26 @@ class DTree:
         if not (bestNodeInformationGain > 0):
             return LeafNode(majorityClass, majorityClassFraction) #Base Case
         
-        cloneBestNode = InternalNode(bestNode.schema, bestNode.featureIndex, bestNode.possibleSplitThresholds)
-        cloneBestNode.chosenThresholdIndex = bestThresholdIndex 
+        cloneBestNodePossibleSplitThresholds = list(bestNode.possibleSplitThresholds) if bestNode.possibleSplitThresholds else None
+        cloneBestNode = InternalNode(bestNode.schema, bestNode.featureIndex, cloneBestNodePossibleSplitThresholds)
+        cloneBestNode.chosenThresholdIndex = bestThresholdIndex
                         
         if self.useInformationGain:
-            print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [InformationGain=' + str(bestNodeInformationGain) + ']'
+            print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [InformationGain=' + str(bestNodeInformationGain) + '] ' + bestNode.schema.features[bestNode.featureIndex].type
         else:
-            print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [GainRatio=' + str(bestNodeGainRatio) + ']' 
+            print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [GainRatio=' + str(bestNodeGainRatio) + '] ' + bestNode.schema.features[bestNode.featureIndex].type 
         
         #Add the child nodes corresponding to this choice
         if depthRemaining > 0:
             depthRemaining = depthRemaining - 1
     
         for bin, binnedExamples in bestNodeBinnedExamples.items():
-            if len(binnedExamples) > 0:
-                newPossibleSplitNodes = list(possibleSplitNodes)
-                self._removeUnnecessaryNodes(newPossibleSplitNodes, bestNode, bestThresholdIndex, bin)
-                
-                #Recurse and add result as child node
-                childNode = self._buildTree(binnedExamples, schema, newPossibleSplitNodes, depthRemaining, majorityClass)
-                self.totalNodesCounter = self.totalNodesCounter + 1
-                cloneBestNode.addChild(childNode, bin)          
+            newPossibleSplitNodes = list(possibleSplitNodes)
+            self._removeUnnecessaryNodes(newPossibleSplitNodes, bestNode, bestThresholdIndex, bin)
+            
+            #Recurse and add result as child node
+            childNode = self._buildTree(binnedExamples, schema, newPossibleSplitNodes, depthRemaining, majorityClass)
+            cloneBestNode.addChild(childNode, bin)          
               
         return cloneBestNode    
     

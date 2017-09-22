@@ -49,6 +49,6 @@ def majority_class(examples):
             majorityClass = classLabel
             majorityClassCount = count
     
-    majorityClassFraction = majorityClassCount / len(examples)
+    majorityClassFraction = float(majorityClassCount) / len(examples)
             
     return majorityClass, majorityClassFraction
