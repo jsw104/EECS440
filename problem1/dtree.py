@@ -15,7 +15,7 @@ class DTree:
         if type(dataPath) is not str:
             raise ValueError('The data path must be a string')
         fileName = os.path.basename(dataPath)
-        rootDirectory = os.path.join(os.path.dirname(os.path.realpath(__file__)), dataPath[1:-(len(fileName) + 1)])
+        rootDirectory = os.path.join(os.path.dirname(os.path.realpath(__file__)), dataPath[0:-(len(fileName) + 1)])
 
         exampleSet = parse_c45(fileName, rootDirectory)
 
@@ -207,10 +207,10 @@ class DTree:
         cloneBestNode = InternalNode(bestNode.schema, bestNode.featureIndex)
         cloneBestNode.boundaryValue = bestBoundaryValue
                         
-        if self.useInformationGain:
-            print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [InformationGain=' + str(bestNodeInformationGain) + '] ' + bestNode.schema.features[bestNode.featureIndex].type
-        else:
-            print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [GainRatio=' + str(bestNodeGainRatio) + '] ' + bestNode.schema.features[bestNode.featureIndex].type 
+        #if self.useInformationGain:
+        #    print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [InformationGain=' + str(bestNodeInformationGain) + '] ' + bestNode.schema.features[bestNode.featureIndex].type
+        #else:
+        #    print 'Selected Split: (Feature Index ' + str(bestNode.featureIndex) + ') ' + bestNode.schema.features[bestNode.featureIndex].name + ' [GainRatio=' + str(bestNodeGainRatio) + '] ' + bestNode.schema.features[bestNode.featureIndex].type 
         
         #Add the child nodes corresponding to this choice
         if depthRemaining > 0:
@@ -242,7 +242,11 @@ def parseCommandLineToTree():
       
 #MAIN        
 dtree = parseCommandLineToTree()
-print '======'
+
+#print '======' 
+#print str(dtree.evaluateExamples(dtree.rootNode, dtree.examples))
+#print '======'
+
 print 'Accuracy: ' + str(dtree.accuracy)
 countInternalNodes, countLeafNodes = dtree.countNodes()
 print 'Size: ' + str(countInternalNodes) #Not counting leaf nodes

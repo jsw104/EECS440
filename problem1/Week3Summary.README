@@ -1,0 +1,3 @@
+This week we implemented gain-ratio, cross-validation, and accuracy measurements.
+We also put significant effort into optimizing the computation time and memory
+requirements, achieving significant reductions in both.
