@@ -37,8 +37,9 @@ class NeuralNetwork:
 
     def executeTrainingIteration(self, trainingExamples):
         for example in trainingExamples:
+            expectedOutput = example[-1]
             example = self.normalizeExample(example)
-            self.evaluateExample(example)
+            self.evaluateExample(example, expectedOutput)
 
     def normalizeExample(self, example):
         inputList = []
@@ -51,11 +52,14 @@ class NeuralNetwork:
             return self.nominalAttributeHash[feature]
         return feature
 
-    def evaluateExample(self, example):
+    def evaluateExample(self, example, expectedOutput):
         hiddenLayerOutputs = []
         for hiddenLayerNode in self.hiddenLayerNodes:
             summation = hiddenLayerNode.calculateInputWeightSummation(example)
             hiddenLayerOutputs.append(hiddenLayerNode.calculateSigmoid(summation))
         outputNodeSummation = self.outputNode.calculateInputWeightSummation(hiddenLayerOutputs)
         output = self.outputNode.calculateSigmoid(outputNodeSummation)
-        #calculate error from expected output here
+        print "performance: " + str(self.calculatePerformance(output, expectedOutput))
+
+    def calculatePerformance(self, output, expectedOutput):
+        return 0.5 * (output - expectedOutput)**2
