@@ -16,22 +16,19 @@ class NeuralNetworkLayer:
 		return np.reshape(layerInputs.dot(self.weights.transpose()),(-1,1)) + self.biases
 		 
 	def applyActivationFunction(self, weightedSums):
-		#print weightedSums
 		outputs = np.copy(weightedSums)
 		derivsActivationFunc = np.copy(outputs)
-		binaryOutputs = np.copy(outputs)	
-		#print outputs
 		for i in range(0, len(weightedSums)):
 			outputs[i] = 1.0 / (1.0 + math.exp(-1.0*weightedSums[i]))
 			derivsActivationFunc[i] = outputs[i] * (1.0-outputs[i])
-			binaryOutputs[i] = (int(round(outputs[i])) == 1)
-		return outputs, binaryOutputs, derivsActivationFunc
+		return outputs, derivsActivationFunc
 	
 	def getOutputs(self, inputs):
 		weightedSums = self.calculateInputWeightSummations(inputs)
-		layerOutputs, binaryLayerOutputs, derivsActivationFunc = self.applyActivationFunction(weightedSums)
-		return layerOutputs, binaryLayerOutputs, derivsActivationFunc
+		layerOutputs, derivsActivationFunc = self.applyActivationFunction(weightedSums)
+		return layerOutputs, derivsActivationFunc
 		
+	#Vectorized backpropagation
 	def backpropagate(self, layerInputs, derivs, downstreamBiasSensitivities, downstreamWeights, learningRate = 0.01):
 		# For the output layer, set downstreamBiasSensitivities to the error (output-target) and downstreamWeights to a vector of ones
 		derivs = np.reshape(derivs,(-1,1))
@@ -66,6 +63,5 @@ class NeuralNetworkLayer:
 		#print self.weights
 		
 		return oldWeights, biasSensitivities
-		
 		
 		
