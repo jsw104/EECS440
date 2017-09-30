@@ -5,7 +5,7 @@ class NeuralNode:
     def __init__(self, numberOfWeights):
         self.weights = []
         for i in range(0, numberOfWeights):
-            self.weights.append(random.uniform(0, 1))
+            self.weights.append(random.uniform(-0.1, 0.1))
 
     def calculateInputWeightSummation(self, inputs):
         if (len(inputs) != len(self.weights)):
@@ -22,3 +22,6 @@ class NeuralNode:
     #use this for training phase
     def calculateSigmoid(self, x):
         return 1 / (1 + math.exp(-x))
+        
+        
+        
