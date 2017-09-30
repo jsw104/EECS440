@@ -19,9 +19,16 @@ class NeuralNetworkLayer:
 		outputs = np.copy(weightedSums)
 		derivsActivationFunc = np.copy(outputs)
 		for i in range(0, len(weightedSums)):
-			outputs[i] = 1.0 / (1.0 + math.exp(-1.0*weightedSums[i]))
+			outputs[i] = self._sigmoid(weightedSums[i])
 			derivsActivationFunc[i] = outputs[i] * (1.0-outputs[i])
 		return outputs, derivsActivationFunc
+	
+	def _sigmoid(self, x):
+		if x >= 0:
+			return 1 / (1 + math.exp(-x))
+		else:
+			expx = math.exp(x)
+			return expx / (1 + expx)
 	
 	def getOutputs(self, inputs):
 		weightedSums = self.calculateInputWeightSummations(inputs)

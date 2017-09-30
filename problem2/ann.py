@@ -25,18 +25,19 @@ def parseCommandLine():
     return dataPath, useCrossValidation, numberOfHiddenNodes, weightDecayCoeff, numberOfTrainingIterations
 
 class NormalizedExample:
-    def __init__(self, example, schema, nominalAttributeHash):
+    def __init__(self, example, schema, nominalAttributeHashes):
         inputsList = []
         targetsList = []
         for i in range(0, len(example)):
-            if schema[i].type == Feature.Type.NOMINAL:
+            if schema.features[i].type == Feature.Type.NOMINAL:
+                nominalAttributeHash = nominalAttributeHashes[schema.features[i]]
                 feature = example[i]
                 if example[i] in nominalAttributeHash:
                     feature = nominalAttributeHash[feature]
                 inputsList.append(feature) 
-            elif (schema[i].type == Feature.Type.BINARY or schema[i].type == Feature.Type.CONTINUOUS):
-                inputLists.append(example[i])
-            elif schema[i].type == Feature.Type.CLASS:
+            elif (schema.features[i].type == Feature.Type.BINARY or schema.features[i].type == Feature.Type.CONTINUOUS):
+                inputsList.append(example[i])
+            elif schema.features[i].type == Feature.Type.CLASS:
                 targetsList.append(example[i])                    
         self.inputs = np.array(inputsList)
         self.targets = np.array(targetsList)
@@ -51,23 +52,31 @@ class NeuralNetworkManager:
             
         # Construct nominal attribute hash and count the total number of features
         numUsefulFeatures = 0
-        nominalAttributeHash = {}
+        self.nominalAttributeHashes = {}
         for i in range(0,len(exampleSet.schema.features)):
+            nominalAttributeHash = None
             if exampleSet.schema.features[i].type == Feature.Type.NOMINAL or exampleSet.schema.features[i].type == Feature.Type.BINARY or exampleSet.schema.features[i].type == Feature.Type.CONTINUOUS:
                 numUsefulFeatures = numUsefulFeatures + 1
             if exampleSet.schema.features[i].type == Feature.Type.NOMINAL:
                 for value in exampleSet.schema[i].values:
+                    if nominalAttributeHash is None:
+                        nominalAttributeHash = {}
+                        self.nominalAttributeHashes[exampleSet.schema.features[i]] = nominalAttributeHash
                     if value not in nominalAttributeHash:
                         nominalAttributeHash[value] = len(nominalAttributeHash.keys())
-                      
+         
+        print str(numUsefulFeatures) + ' useful features' 
+                              
         # Normalize all examples  
         self.normalizedExamples = []
         for example in exampleSet.examples:
-            self.normalizedExamples.append(NormalizedExample(example, exampleSet.schema, nominalAttributeHash))
+            self.normalizedExamples.append(NormalizedExample(example, exampleSet.schema, self.nominalAttributeHashes))
         
         # Construct the neural network
         numberOfOutputNodes = len(self.normalizedExamples[0].targets)
         layerSizesList = [numberOfHiddenNodes, numberOfOutputNodes] # Only a single hidden layer
+        if layerSizesList[0] == 0: # If no hidden layer
+            layerSizesList = [numberOfOutputNodes]
         self.neuralNetwork = NeuralNetwork(layerSizesList, numUsefulFeatures, weightDecayCoeff)
         
     def trainNetwork(self, numIterations):
@@ -76,9 +85,14 @@ class NeuralNetworkManager:
         print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(self.normalizedExamples))
         for i in range(0, numIterations):
             self.neuralNetwork.executeTrainingIteration(self.normalizedExamples)
-            sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(self.normalizedExamples)
-            print 'AFTER ' + str(i+1) + ' TRAINING ITERATIONS'
-            print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(self.normalizedExamples))
+            if (i+1) % 10 == 0:
+                sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(self.normalizedExamples)
+                print 'AFTER ' + str(i+1) + ' TRAINING ITERATIONS:'
+                print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(self.normalizedExamples))
+
+        sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(self.normalizedExamples)
+        print 'FINAL:'
+        print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(self.normalizedExamples))
 
     def evaluateExampleError(self, example):
         outputs = self.neuralNetwork.stimulateNetwork(example.inputs)
