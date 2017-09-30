@@ -35,23 +35,17 @@ class NeuralNetwork:
 
         self.nominalAttributeHash = {}
         self._constructNominalAttributeHash()
-
-        #for i in range(1, numberOfHiddenNodes):
-            #the first and last feature are not useful
-            #self.hiddenLayerNodes.append(NeuralNode(len(self.schema.features) - 2))
-        
-        #self.outputNode = NeuralNode(len(self.hiddenLayerNodes))
         
         self.evaluateNetworkPerformance(self.examples)
         for i in range (0, numberOfTrainingIterations):
             print("Currently on training iteration " + str(i+1))
             self.executeTrainingIteration(self.examples)
             self.evaluateNetworkPerformance(self.examples)
-            for layer in self.layers:
-                print 'biases'
-                print layer.biases
-                print 'weights'
-                print layer.weights
+            #for layer in self.layers:
+            #    print 'biases'
+            #    print layer.biases
+            #    print 'weights'
+            #    print layer.weights
                 
 
     def _constructNominalAttributeHash(self):
@@ -66,7 +60,7 @@ class NeuralNetwork:
         layerInputs = []
         layerActivationDerivs = []
         layerInputs.append(inputs)
-        layerActivationDerivs.append(None) #Dummy entry to keep indexes aligned
+        #layerActivationDerivs.append(None) #Dummy entry to keep indexes aligned
         while True:
             layerOutputs, activationDerivs = self.layers[layerIndex].getOutputs(layerInputs[-1])
             layerInputs.append(layerOutputs)
@@ -81,16 +75,9 @@ class NeuralNetwork:
         downstreamWeights = np.ones(len(errors)) #might need to transpose this if we have multiple outputs
         
         while layerIndex >= 0:
-            print '============================================'
             layer = self.layers[layerIndex]
-            print layer.numInputs, layer.numNodesThisLayer
-            print layer.biases
-            print layer.weights
-            #print 'LAYER:' + str(layerIndex) + ' nodes: ' + str(layer.numNodesThisLayer) + ' inputs: ' + str(layer.numInputs)
-            downstreamWeights, downstreamBiasSensitivities = layer.backpropagate(layerInputs[layerIndex+1],layerActivationDerivs[layerIndex+1],downstreamBiasSensitivities,downstreamWeights)
+            downstreamWeights, downstreamBiasSensitivities = layer.backpropagate(layerInputs[layerIndex],layerActivationDerivs[layerIndex],downstreamBiasSensitivities,downstreamWeights)
             layerIndex = layerIndex - 1
-            print '============================================'
-
     
     def executeTrainingIteration(self, trainingExamples):
         for example in trainingExamples:
@@ -100,9 +87,7 @@ class NeuralNetwork:
             inputs = self.normalizeExample(example)
             targets = np.array([1.0]) if example[-1] else np.array([0.0])
             self._train(inputs, targets)      
-            break #for debug only -- remove this
-        
-        
+            break #for debug only -- remove this     
 
     def normalizeExample(self, example):
         inputList = []
@@ -122,7 +107,7 @@ class NeuralNetwork:
         values = exampleInputs
         for layer in self.layers:
             values, derivs = layer.getOutputs(values)
-            
+                    
         errors = targetOutputs - values
         return errors
 

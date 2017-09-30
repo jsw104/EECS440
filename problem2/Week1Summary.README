@@ -1,0 +1,4 @@
+This week we set up out infrastructure for this problem, including parsing the command line arguments,
+reading the data files, normalizing features, and initializing our network. We also implemented forward
+propagation logic and most of the backpropagation logic, which we've vectorized. Finally, we started to 
+write the code for evaluating the network accuracy on a set of examples.
