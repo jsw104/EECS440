@@ -1,4 +1,3 @@
-from neuralNode import *
 from neuralNetworkLayer import *
 import os
 from mldata import *
@@ -62,7 +61,7 @@ class NeuralNetwork:
         layerInputs.append(inputs)
         #layerActivationDerivs.append(None) #Dummy entry to keep indexes aligned
         while True:
-            layerOutputs, activationDerivs = self.layers[layerIndex].getOutputs(layerInputs[-1])
+            layerOutputs, binaryLayerOutputs, activationDerivs = self.layers[layerIndex].getOutputs(layerInputs[-1])
             layerInputs.append(layerOutputs)
             layerActivationDerivs.append(activationDerivs)
             if layerIndex+1 < len(self.layers):
@@ -70,7 +69,7 @@ class NeuralNetwork:
             else:
                 break      
                 
-        errors = targets - layerInputs[layerIndex+1] 
+        errors = layerInputs[layerIndex+1] - targets 
         downstreamBiasSensitivities = errors #might need to transpose this if we have multiple outputs
         downstreamWeights = np.ones(len(errors)) #might need to transpose this if we have multiple outputs
         
@@ -81,13 +80,10 @@ class NeuralNetwork:
     
     def executeTrainingIteration(self, trainingExamples):
         for example in trainingExamples:
-            #expectedOutput = example[-1]
-            #example = self.normalizeExample(example)
-            #self.evaluateExample(example, expectedOutput)
             inputs = self.normalizeExample(example)
             targets = np.array([1.0]) if example[-1] else np.array([0.0])
             self._train(inputs, targets)      
-            break #for debug only -- remove this     
+            #break #for debug only -- remove this     
 
     def normalizeExample(self, example):
         inputList = []
@@ -106,21 +102,23 @@ class NeuralNetwork:
     def evaluateExample(self, exampleInputs, targetOutputs):
         values = exampleInputs
         for layer in self.layers:
-            values, derivs = layer.getOutputs(values)
-                    
-        errors = targetOutputs - values
-        return errors
+            values, binaryValues, derivs = layer.getOutputs(values)
+                                        
+        rawErrors = targetOutputs - values
+        binaryErrors = np.absolute(np.rint(values) - targetOutputs) # 0 => Correct; 1 => Wrong
+        return rawErrors, binaryErrors
 
     def evaluateNetworkPerformance(self, examples):
         numCorrect = 0
-        sumSumSquaredErrors = 0
+        sumSquaredErrors = 0
         for i in range(0,len(examples)-1):
             exampleInputs = self.normalizeExample(examples[i]) #Let's not have to normalize every time
             targetOutputs = np.array([1.0]) if examples[i][-1] else np.array([0.0])
-            rawErrors = self.evaluateExample(exampleInputs, targetOutputs)
-            if(abs(np.sum(rawErrors)) < 0.5):
+            rawErrors, binaryErrors = self.evaluateExample(exampleInputs, targetOutputs)
+            sumSquaredErrors = sumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors)
+            if(np.sum(binaryErrors) == 0):
                 numCorrect = numCorrect + 1
-            sumSumSquaredErrors = sumSumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors)
-        print 'SUM-SUM-SQUARED-ERRORS: ' + str(sumSumSquaredErrors)
+            
+        print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors)
         print 'NUM CORRECT: ' + str(numCorrect) + '/' + str(len(examples))
 
