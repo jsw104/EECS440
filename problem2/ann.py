@@ -2,6 +2,7 @@ import sys
 import copy
 import numpy as np
 from neuralNetwork import *
+from continuousAttributeStandardizer import *
 from mldata import *
 
 # example: python ann ../testData/spam/spam 1 10 .01 10000
@@ -25,7 +26,7 @@ def parseCommandLine():
     return dataPath, useCrossValidation, numberOfHiddenNodes, weightDecayCoeff, numberOfTrainingIterations
 
 class NormalizedExample:
-    def __init__(self, example, schema, nominalAttributeHashes):
+    def __init__(self, example, schema, nominalAttributeHashes, continuousAttributeHash):
         inputsList = []
         targetsList = []
         for i in range(0, len(example)):
@@ -35,8 +36,10 @@ class NormalizedExample:
                 if example[i] in nominalAttributeHash:
                     feature = nominalAttributeHash[feature]
                 inputsList.append(feature) 
-            elif (schema.features[i].type == Feature.Type.BINARY or schema.features[i].type == Feature.Type.CONTINUOUS):
+            elif (schema.features[i].type == Feature.Type.BINARY):
                 inputsList.append(example[i])
+            elif (schema.features[i].type == Feature.Type.CONTINUOUS):
+                inputsList.append((continuousAttributeHash[schema.features[i]]).standardizeInput(example[i]))
             elif schema.features[i].type == Feature.Type.CLASS:
                 targetsList.append(example[i])                    
         self.inputs = np.array(inputsList)
@@ -53,6 +56,7 @@ class NeuralNetworkManager:
         # Construct nominal attribute hash and count the total number of features
         numUsefulFeatures = 0
         self.nominalAttributeHashes = {}
+        self.continuousAttributeHash = {}
         for i in range(0,len(exampleSet.schema.features)):
             nominalAttributeHash = None
             if exampleSet.schema.features[i].type == Feature.Type.NOMINAL or exampleSet.schema.features[i].type == Feature.Type.BINARY or exampleSet.schema.features[i].type == Feature.Type.CONTINUOUS:
@@ -64,13 +68,15 @@ class NeuralNetworkManager:
                         self.nominalAttributeHashes[exampleSet.schema.features[i]] = nominalAttributeHash
                     if value not in nominalAttributeHash:
                         nominalAttributeHash[value] = len(nominalAttributeHash.keys())
+            elif exampleSet.schema.features[i].type == Feature.Type.CONTINUOUS:
+                self.continuousAttributeHash[exampleSet.schema.features[i]] = ContinuousAttributeStandardizer(exampleSet.examples, i)
          
         print str(numUsefulFeatures) + ' useful features' 
                               
         # Normalize all examples  
         self.normalizedExamples = []
         for example in exampleSet.examples:
-            self.normalizedExamples.append(NormalizedExample(example, exampleSet.schema, self.nominalAttributeHashes))
+            self.normalizedExamples.append(NormalizedExample(example, exampleSet.schema, self.nominalAttributeHashes, self.continuousAttributeHash))
         
         # Construct the neural network
         numberOfOutputNodes = len(self.normalizedExamples[0].targets)
