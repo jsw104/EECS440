@@ -3,6 +3,7 @@ import copy
 import numpy as np
 from neuralNetwork import *
 from continuousAttributeStandardizer import *
+from exampleManager import *
 from mldata import *
 
 # example: python ann ../testData/spam/spam 1 10 .01 10000
@@ -47,27 +48,36 @@ class NormalizedExample:
 
 
 class NeuralNetworkManager:                        
-    def __init__(self, dataPath, numberOfHiddenNodes, weightDecayCoeff):
+    def __init__(self, dataPath, numberOfHiddenNodes, weightDecayCoeff, useCrossValidation):
         # Read data file
         fileName = os.path.basename(dataPath)
         rootDirectory = os.path.join(os.path.dirname(os.path.realpath(__file__)), dataPath[0:-(len(fileName) + 1)])
         exampleSet = parse_c45(fileName, rootDirectory)
             
-        # Construct nominal attribute hash and count the total number of features
+        # Construct nominal attribute hashes and continuousAttributeHash and count the total number of features
         self.nominalAttributeHashes, self.continuousAttributeHash, numUsefulFeatures = self.createAttributeHashes(exampleSet)
 
         # Normalize all examples  
-        self.normalizedExamples = []
+        normalizedExamples = []
         for example in exampleSet.examples:
-            self.normalizedExamples.append(NormalizedExample(example, exampleSet.schema, self.nominalAttributeHashes, self.continuousAttributeHash))
-        
+            normalizedExamples.append(NormalizedExample(example, exampleSet.schema, self.nominalAttributeHashes, self.continuousAttributeHash))
+
+        #create example manager to handle constructing folds and delineating test and training examples
+        self.useCrossValidation = useCrossValidation
+        self.exampleManager = ExampleManager(normalizedExamples, useCrossValidation)
+
         # Construct the neural network
-        numberOfOutputNodes = len(self.normalizedExamples[0].targets)
+        numberOfOutputNodes = len(normalizedExamples[0].targets)
         layerSizesList = [numberOfHiddenNodes, numberOfOutputNodes] # Only a single hidden layer
         if layerSizesList[0] == 0: # If no hidden layer
             layerSizesList = [numberOfOutputNodes]
-        self.neuralNetwork = NeuralNetwork(layerSizesList, numUsefulFeatures, weightDecayCoeff)
 
+        self.neuralNetworks = []
+        for i in range(0, self.exampleManager.numFolds()):
+            self.neuralNetworks.append(NeuralNetwork(layerSizesList, numUsefulFeatures, weightDecayCoeff))
+
+    #nominalAttributeHashes creates direct mapping of inputs to normalized values for each feature
+    #continuousAttributeHash creates a continuousAttributeStandardizer for each feature
     def createAttributeHashes(self, exampleSet):
         numUsefulFeatures = 0
         nominalAttributeHashes = {}
@@ -91,32 +101,41 @@ class NeuralNetworkManager:
         print str(numUsefulFeatures) + ' useful features'
         return nominalAttributeHashes, continuousAttributeHash, numUsefulFeatures
 
-    def trainNetwork(self, numIterations):
-        sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(self.normalizedExamples)
+    def train(self, numIterations):
+        if self.useCrossValidation:
+            for i in range(0, self.exampleManager.numFolds()):
+                trainingExamples, testingExamples = self.exampleManager.getCrossValidationExamples(i)
+                self.trainNetwork(self.neuralNetworks[i], numIterations, trainingExamples, testingExamples)
+        else:
+            trainingExamples, testingExamples = self.exampleManager.getUnfoldedExamples()
+            self.trainNetwork(self.neuralNetworks[0], numIterations, trainingExamples, testingExamples)
+
+    def trainNetwork(self, neuralNetwork, numIterations, trainingExamples, testingExamples):
+        sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(neuralNetwork, testingExamples)
         print 'INITIAL:'
-        print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(self.normalizedExamples))
+        print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(testingExamples))
         for i in range(0, numIterations):
-            self.neuralNetwork.executeTrainingIteration(self.normalizedExamples)
+            neuralNetwork.executeTrainingIteration(trainingExamples)
             if (i+1) % 10 == 0:
-                sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(self.normalizedExamples)
+                sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(neuralNetwork, testingExamples)
                 print 'AFTER ' + str(i+1) + ' TRAINING ITERATIONS:'
-                print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(self.normalizedExamples))
+                print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(testingExamples))
 
-        sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(self.normalizedExamples)
+        sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(neuralNetwork, testingExamples)
         print 'FINAL:'
-        print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(self.normalizedExamples))
+        print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(testingExamples))
 
-    def evaluateExampleError(self, example):
-        outputs = self.neuralNetwork.stimulateNetwork(example.inputs)
+    def evaluateExampleError(self, neuralNetwork, example):
+        outputs = neuralNetwork.stimulateNetwork(example.inputs)
         rawErrors = outputs - example.targets                                       
         binaryErrors = np.absolute(np.rint(outputs) - example.targets) # 0 => Correct; 1 => Wrong
         return rawErrors, binaryErrors
 
-    def evaluateNetworkPerformance(self, examples):
+    def evaluateNetworkPerformance(self, neuralNetwork, examples):
         numCorrect = 0
         sumSquaredErrors = 0
         for example in examples:
-            rawErrors, binaryErrors = self.evaluateExampleError(example)
+            rawErrors, binaryErrors = self.evaluateExampleError(neuralNetwork, example)
             sumSquaredErrors = sumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors)
             if(np.sum(binaryErrors) == 0):
                 numCorrect = numCorrect + 1      
@@ -126,6 +145,6 @@ class NeuralNetworkManager:
 # MAIN
 np.random.seed(12345)
 dataPath, useCrossValidation, numberOfHiddenNodes, weightDecayCoeff, numberOfTrainingIterations = parseCommandLine()
-neuralNetworkManager = NeuralNetworkManager(dataPath, numberOfHiddenNodes, weightDecayCoeff)
-neuralNetworkManager.trainNetwork(numberOfTrainingIterations)
+neuralNetworkManager = NeuralNetworkManager(dataPath, numberOfHiddenNodes, weightDecayCoeff, useCrossValidation)
+neuralNetworkManager.train(numberOfTrainingIterations)
 
