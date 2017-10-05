@@ -54,25 +54,8 @@ class NeuralNetworkManager:
         exampleSet = parse_c45(fileName, rootDirectory)
             
         # Construct nominal attribute hash and count the total number of features
-        numUsefulFeatures = 0
-        self.nominalAttributeHashes = {}
-        self.continuousAttributeHash = {}
-        for i in range(0,len(exampleSet.schema.features)):
-            nominalAttributeHash = None
-            if exampleSet.schema.features[i].type == Feature.Type.NOMINAL or exampleSet.schema.features[i].type == Feature.Type.BINARY or exampleSet.schema.features[i].type == Feature.Type.CONTINUOUS:
-                numUsefulFeatures = numUsefulFeatures + 1
-            if exampleSet.schema.features[i].type == Feature.Type.NOMINAL:
-                for value in exampleSet.schema[i].values:
-                    if nominalAttributeHash is None:
-                        nominalAttributeHash = {}
-                        self.nominalAttributeHashes[exampleSet.schema.features[i]] = nominalAttributeHash
-                    if value not in nominalAttributeHash:
-                        nominalAttributeHash[value] = len(nominalAttributeHash.keys())
-            elif exampleSet.schema.features[i].type == Feature.Type.CONTINUOUS:
-                self.continuousAttributeHash[exampleSet.schema.features[i]] = ContinuousAttributeStandardizer(exampleSet.examples, i)
-         
-        print str(numUsefulFeatures) + ' useful features' 
-                              
+        self.nominalAttributeHashes, self.continuousAttributeHash, numUsefulFeatures = self.createAttributeHashes(exampleSet)
+
         # Normalize all examples  
         self.normalizedExamples = []
         for example in exampleSet.examples:
@@ -84,7 +67,30 @@ class NeuralNetworkManager:
         if layerSizesList[0] == 0: # If no hidden layer
             layerSizesList = [numberOfOutputNodes]
         self.neuralNetwork = NeuralNetwork(layerSizesList, numUsefulFeatures, weightDecayCoeff)
-        
+
+    def createAttributeHashes(self, exampleSet):
+        numUsefulFeatures = 0
+        nominalAttributeHashes = {}
+        continuousAttributeHash = {}
+        for i in range(0, len(exampleSet.schema.features)):
+            nominalAttributeHash = None
+            if exampleSet.schema.features[i].type == Feature.Type.NOMINAL or exampleSet.schema.features[
+                i].type == Feature.Type.BINARY or exampleSet.schema.features[i].type == Feature.Type.CONTINUOUS:
+                numUsefulFeatures = numUsefulFeatures + 1
+            if exampleSet.schema.features[i].type == Feature.Type.NOMINAL:
+                for value in exampleSet.schema[i].values:
+                    if nominalAttributeHash is None:
+                        nominalAttributeHash = {}
+                        nominalAttributeHashes[exampleSet.schema.features[i]] = nominalAttributeHash
+                    if value not in nominalAttributeHash:
+                        nominalAttributeHash[value] = len(nominalAttributeHash.keys())
+            elif exampleSet.schema.features[i].type == Feature.Type.CONTINUOUS:
+                continuousAttributeHash[exampleSet.schema.features[i]] = ContinuousAttributeStandardizer(
+                    exampleSet.examples, i)
+
+        print str(numUsefulFeatures) + ' useful features'
+        return nominalAttributeHashes, continuousAttributeHash, numUsefulFeatures
+
     def trainNetwork(self, numIterations):
         sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(self.normalizedExamples)
         print 'INITIAL:'
