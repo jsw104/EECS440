@@ -111,35 +111,19 @@ class NeuralNetworkManager:
             self.trainNetwork(self.neuralNetworks[0], numIterations, trainingExamples, testingExamples)
 
     def trainNetwork(self, neuralNetwork, numIterations, trainingExamples, testingExamples):
-        sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(neuralNetwork, testingExamples)
+        sumSquaredErrors, numCorrect = neuralNetwork.evaluatePerformance(testingExamples)
         print 'INITIAL:'
         print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(testingExamples))
         for i in range(0, numIterations):
             neuralNetwork.executeTrainingIteration(trainingExamples)
             if (i+1) % 10 == 0:
-                sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(neuralNetwork, testingExamples)
+                sumSquaredErrors, numCorrect = neuralNetwork.evaluatePerformance(testingExamples)
                 print 'AFTER ' + str(i+1) + ' TRAINING ITERATIONS:'
                 print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(testingExamples))
 
-        sumSquaredErrors, numCorrect = self.evaluateNetworkPerformance(neuralNetwork, testingExamples)
+        sumSquaredErrors, numCorrect = neuralNetwork.evaluatePerformance(testingExamples)
         print 'FINAL:'
         print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(testingExamples))
-
-    def evaluateExampleError(self, neuralNetwork, example):
-        outputs = neuralNetwork.stimulateNetwork(example.inputs)
-        rawErrors = outputs - example.targets                                       
-        binaryErrors = np.absolute(np.rint(outputs) - example.targets) # 0 => Correct; 1 => Wrong
-        return rawErrors, binaryErrors
-
-    def evaluateNetworkPerformance(self, neuralNetwork, examples):
-        numCorrect = 0
-        sumSquaredErrors = 0
-        for example in examples:
-            rawErrors, binaryErrors = self.evaluateExampleError(neuralNetwork, example)
-            sumSquaredErrors = sumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors)
-            if(np.sum(binaryErrors) == 0):
-                numCorrect = numCorrect + 1      
-        return sumSquaredErrors, numCorrect
     
     
 # MAIN

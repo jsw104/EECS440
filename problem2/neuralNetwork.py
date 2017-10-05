@@ -45,3 +45,19 @@ class NeuralNetwork:
         for layer in self.layers:
             values, derivs = layer.getOutputs(values)
         return values
+
+    def __evaluateExampleError(self, example):
+        outputs = self.stimulateNetwork(example.inputs)
+        rawErrors = outputs - example.targets
+        binaryErrors = np.absolute(np.rint(outputs) - example.targets) # 0 => Correct; 1 => Wrong
+        return rawErrors, binaryErrors
+
+    def evaluatePerformance(self, examples):
+        numCorrect = 0
+        sumSquaredErrors = 0
+        for example in examples:
+            rawErrors, binaryErrors = self.__evaluateExampleError(example)
+            sumSquaredErrors = sumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors)
+            if(np.sum(binaryErrors) == 0):
+                numCorrect = numCorrect + 1
+        return sumSquaredErrors, numCorrect
