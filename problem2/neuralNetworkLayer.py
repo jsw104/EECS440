@@ -35,9 +35,14 @@ class NeuralNetworkLayer:
 		layerOutputs, derivsActivationFunc = self.applyActivationFunction(weightedSums)
 		return layerOutputs, derivsActivationFunc
 		
-	#Vectorized backpropagation
-	def backpropagate(self, layerInputs, derivs, downstreamBiasSensitivities, downstreamWeights, learningRate = 0.01):
+	def backpropagate(self, layerInputs, derivs, downstreamBiasSensitivities, downstreamWeights, learningRate = 0.01, weightDecayFactor = 0.0):
 		# For the output layer, set downstreamBiasSensitivities to the error (output-target) and downstreamWeights to a vector of ones
+		
+		# WEIGHT DECAY
+		if(weightDecayFactor != 0.0):
+			self.weights = (1 - 2*weightDecayFactor*learningRate) * self.weights
+		
+		# VECTORIZED BACKPROPAGATION
 		derivs = np.reshape(derivs,(-1,1))
 		biasSensitivities = np.multiply(downstreamWeights.transpose().dot(np.reshape(downstreamBiasSensitivities,(1,-1))), derivs)
 		weightSensitivities = biasSensitivities.dot(np.reshape(layerInputs,(1,-1)))

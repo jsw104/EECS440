@@ -118,7 +118,7 @@ class NeuralNetworkManager:
             neuralNetwork.executeTrainingIteration(trainingExamples)
             if (i+1) % 10 == 0:
                 sumSquaredErrors, numCorrect = neuralNetwork.evaluatePerformance(testingExamples)
-                print 'AFTER ' + str(i+1) + ' TRAINING ITERATIONS:'
+                print 'AFTER ' + str(i+1) + ' TRAINING EPOCHS:'
                 print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(testingExamples))
 
         sumSquaredErrors, numCorrect = neuralNetwork.evaluatePerformance(testingExamples)

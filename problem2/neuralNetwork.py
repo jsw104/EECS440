@@ -33,7 +33,7 @@ class NeuralNetwork:
         downstreamWeights = np.ones(len(errors)) #might need to transpose this if we have multiple outputs
         while layerIndex >= 0:
             layer = self.layers[layerIndex]
-            downstreamWeights, downstreamBiasSensitivities = layer.backpropagate(layerInputs[layerIndex],layerActivationDerivs[layerIndex],downstreamBiasSensitivities,downstreamWeights)
+            downstreamWeights, downstreamBiasSensitivities = layer.backpropagate(layerInputs[layerIndex],layerActivationDerivs[layerIndex],downstreamBiasSensitivities,downstreamWeights,weightDecayFactor=self.weightDecayCoeff)
             layerIndex = layerIndex - 1
     
     def executeTrainingIteration(self, trainingExamples):
@@ -60,4 +60,5 @@ class NeuralNetwork:
             sumSquaredErrors = sumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors)
             if(np.sum(binaryErrors) == 0):
                 numCorrect = numCorrect + 1
+        
         return sumSquaredErrors, numCorrect
