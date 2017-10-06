@@ -98,7 +98,6 @@ class NeuralNetworkManager:
                 continuousAttributeHash[exampleSet.schema.features[i]] = ContinuousAttributeStandardizer(
                     exampleSet.examples, i)
 
-        print str(numUsefulFeatures) + ' useful features'
         return nominalAttributeHashes, continuousAttributeHash, numUsefulFeatures
 
     def train(self, numIterations):
@@ -111,19 +110,16 @@ class NeuralNetworkManager:
             self.trainNetwork(self.neuralNetworks[0], numIterations, trainingExamples, testingExamples)
 
     def trainNetwork(self, neuralNetwork, numIterations, trainingExamples, testingExamples):
-        sumSquaredErrors, numCorrect = neuralNetwork.evaluatePerformance(testingExamples)
-        print 'INITIAL:'
-        print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(testingExamples))
+        pr = neuralNetwork.evaluatePerformance(testingExamples)
+        print 'INITIAL: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
         for i in range(0, numIterations):
             neuralNetwork.executeTrainingIteration(trainingExamples)
             if (i+1) % 10 == 0:
-                sumSquaredErrors, numCorrect = neuralNetwork.evaluatePerformance(testingExamples)
-                print 'AFTER ' + str(i+1) + ' TRAINING EPOCHS:'
-                print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(testingExamples))
+                pr = neuralNetwork.evaluatePerformance(testingExamples)
+                print 'AFTER ' + str(i+1) + ' TRAINING EPOCHS: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
 
-        sumSquaredErrors, numCorrect = neuralNetwork.evaluatePerformance(testingExamples)
-        print 'FINAL:'
-        print 'SUM-SQUARED-ERRORS: ' + str(sumSquaredErrors) + '; NUM CORRECT: ' + str(numCorrect) + '/' + str(len(testingExamples))
+        pr = neuralNetwork.evaluatePerformance(testingExamples)
+        print 'FINAL: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
     
     
 # MAIN

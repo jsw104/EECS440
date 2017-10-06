@@ -49,16 +49,56 @@ class NeuralNetwork:
     def __evaluateExampleError(self, example):
         outputs = self.stimulateNetwork(example.inputs)
         rawErrors = outputs - example.targets
-        binaryErrors = np.absolute(np.rint(outputs) - example.targets) # 0 => Correct; 1 => Wrong
-        return rawErrors, binaryErrors
+        signedBinaryErrors = np.rint(outputs) - example.targets # 0 => Correct (TP or TN); +1 => Wrong (FP); -1 => Wrong (FN)
+        return rawErrors, signedBinaryErrors
 
-    def evaluatePerformance(self, examples):
-        numCorrect = 0
+    def evaluatePerformance(self, examples):  
+        targetShape = examples[0].targets.shape
+        numTruePositives = np.zeros(targetShape)
+        numFalsePositives = np.zeros(targetShape)
+        numTrueNegatives = np.zeros(targetShape)
+        numFalseNegatives = np.zeros(targetShape) 
+        #numFullyCorrect = 0
         sumSquaredErrors = 0
         for example in examples:
-            rawErrors, binaryErrors = self.__evaluateExampleError(example)
+            rawErrors, signedBinaryErrors = self.__evaluateExampleError(example)
             sumSquaredErrors = sumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors)
-            if(np.sum(binaryErrors) == 0):
-                numCorrect = numCorrect + 1
+            #if(np.sum(signedBinaryErrors) == 0):
+            #    numFullyCorrect = numFullyCorrect + 1 
+            numTruePositives = numTruePositives + np.multiply(np.equal(signedBinaryErrors, np.zeros(targetShape)), example.targets)
+            numFalsePositives = numFalsePositives + np.equal(signedBinaryErrors, np.ones(targetShape))
+            numTrueNegatives = numTrueNegatives + np.multiply(np.equal(signedBinaryErrors, np.zeros(targetShape)), np.invert(example.targets))
+            numFalseNegatives = numFalseNegatives + np.equal(signedBinaryErrors, np.full(targetShape, -1))
         
-        return sumSquaredErrors, numCorrect
+        return PerformanceEvaluationResult(sumSquaredErrors, numTruePositives, numFalsePositives, numTrueNegatives, numFalseNegatives)
+    
+    
+    
+class PerformanceEvaluationResult:
+    def __init__(self, sumSquaredErrors, tp, fp, tn, fn):
+        self.sumSquaredErrors = sumSquaredErrors
+        self.tp = np.array(tp)
+        self.fp = np.array(fp)
+        self.tn = np.array(tn)
+        self.fn = np.array(fn)
+        self.totalCorrect = self.tp + self.tn
+        self.totalWrong = self.fp + self.fn
+        self.totalExamples = self.totalCorrect + self.totalWrong
+        
+    def accuracy(self):
+        a = np.divide(self.totalCorrect, self.totalExamples)
+        if a.shape == (1,1):
+            return a[0][0]
+        return a
+    
+    def precision(self):
+        p = np.divide(self.tp, self.tp+self.fp)
+        if p.shape == (1,1):
+            return p[0][0]
+        return p
+    
+    def recall(self):
+        r = np.divide(self.tp, self.tp+self.fn)
+        if r.shape == (1,1):
+            return r[0][0]
+        return r
