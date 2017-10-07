@@ -5,6 +5,7 @@ from neuralNetwork import *
 from continuousAttributeStandardizer import *
 from exampleManager import *
 from mldata import *
+from scipy.constants.codata import precision
 
 # example: python ann ../testData/spam/spam 1 10 .01 10000
 def parseCommandLine():
@@ -21,7 +22,7 @@ def parseCommandLine():
     weightDecayCoeff = float(sys.argv[4])
     numberOfTrainingIterations = int(sys.argv[5])
     
-    if numberOfTrainingIterations == 0:  # If the arg is 0, we want to run until convergence
+    if numberOfTrainingIterations <= 0:  # If the arg is 0 or negative, we want to run until convergence
         numberOfTrainingIterations = -1  # But it's more convenient to represent this as a -1 internally
         
     return dataPath, useCrossValidation, numberOfHiddenNodes, weightDecayCoeff, numberOfTrainingIterations
@@ -101,26 +102,53 @@ class NeuralNetworkManager:
         return nominalAttributeHashes, continuousAttributeHash, numUsefulFeatures
 
     def train(self, numIterations):
+        prs = []
         if self.useCrossValidation:
             for i in range(0, self.exampleManager.numFolds()):
                 trainingExamples, testingExamples = self.exampleManager.getCrossValidationExamples(i)
-                self.trainNetwork(self.neuralNetworks[i], numIterations, trainingExamples, testingExamples)
+                pr = self.trainNetwork(self.neuralNetworks[i], numIterations, trainingExamples, testingExamples)
+                prs.append(pr)
         else:
             trainingExamples, testingExamples = self.exampleManager.getUnfoldedExamples()
-            self.trainNetwork(self.neuralNetworks[0], numIterations, trainingExamples, testingExamples)
+            pr = self.trainNetwork(self.neuralNetworks[0], numIterations, trainingExamples, testingExamples)
+            prs.append(pr)
+                
+        accuracies = []
+        precisions = []
+        recalls = []
+        for pr in prs:
+            accuracies.append(pr.accuracy())
+            precisions.append(pr.precision())
+            recalls.append(pr.recall())
+        
+        avgAccuracy = np.mean(accuracies)
+        stdAccuracy = np.std(accuracies)
+        avgPrecision = np.mean(precisions)
+        stdPrecision = np.std(precisions)
+        avgRecall = np.mean(recalls)
+        stdRecall = np.std(recalls)
+        print 'Accuracy: ' + str(avgAccuracy) + ' ' + str(stdAccuracy)
+        print 'Precision: ' + str(avgPrecision) + ' ' + str(stdPrecision)
+        print 'Recall: ' + str(avgRecall) + ' ' + str(stdRecall) 
+        print 'Area under ROC: ' + 'TODO'
 
-    def trainNetwork(self, neuralNetwork, numIterations, trainingExamples, testingExamples):
+    def trainNetwork(self, neuralNetwork, numIterations, trainingExamples, testingExamples, debuggingOutput = True):
         pr = neuralNetwork.evaluatePerformance(testingExamples)
-        print 'INITIAL: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
+        if debuggingOutput:
+            print 'INITIAL: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
         for i in range(0, numIterations):
-            neuralNetwork.executeTrainingIteration(trainingExamples)
-            if (i+1) % 10 == 0:
+            converged = neuralNetwork.executeTrainingIteration(trainingExamples)
+            if debuggingOutput and (i+1) % 10 == 0:
                 pr = neuralNetwork.evaluatePerformance(testingExamples)
                 print 'AFTER ' + str(i+1) + ' TRAINING EPOCHS: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
-
+            if converged:
+                print 'CONVERGED ON ITERATION ' + str(i)
+                break
+            
         pr = neuralNetwork.evaluatePerformance(testingExamples)
-        print 'FINAL: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
-    
+        if debuggingOutput:
+            print 'FINAL: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
+        return pr
     
 # MAIN
 np.random.seed(12345)

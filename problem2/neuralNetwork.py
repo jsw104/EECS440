@@ -37,53 +37,67 @@ class NeuralNetwork:
             layerIndex = layerIndex - 1
     
     def executeTrainingIteration(self, trainingExamples):
+        initialBiasValues = []
+        initialWeightValues = []
+        for layer in self.layers:
+            initialBiasValues.append(layer.biases)
+            initialWeightValues.append(layer.weights)
+            
         for example in trainingExamples:
-            self._train(example.inputs, example.targets)      
+            self._train(example.inputs, example.targets)  
+        
+        allLayersConverged = True
+        for i in range(0,len(self.layers)-1):
+            allLayersConverged = allLayersConverged and self.layers[i].checkConvergence(initialBiasValues[i], initialWeightValues[i]) 
+            
+        return allLayersConverged  
 
     def stimulateNetwork(self, inputs):
         values = inputs
         for layer in self.layers:
             values, derivs = layer.getOutputs(values)
-        return values
+        return values       
 
-    def __evaluateExampleError(self, example):
-        outputs = self.stimulateNetwork(example.inputs)
-        rawErrors = outputs - example.targets
-        signedBinaryErrors = np.rint(outputs) - example.targets # 0 => Correct (TP or TN); +1 => Wrong (FP); -1 => Wrong (FN)
-        return rawErrors, signedBinaryErrors
-
-    def evaluatePerformance(self, examples):  
+    def evaluatePerformance(self, examples): 
+        outputs = []
+        for example in examples:
+            outputs.append(self.stimulateNetwork(example.inputs))
+        
+        return PerformanceEvaluationResult(examples, outputs)
+    
+    
+class PerformanceEvaluationResult:
+        
+    def __init__(self, examples, outputs):
+        self.examples = examples
+        self.outputs = outputs
+        
         targetShape = examples[0].targets.shape
         numTruePositives = np.zeros(targetShape)
         numFalsePositives = np.zeros(targetShape)
         numTrueNegatives = np.zeros(targetShape)
         numFalseNegatives = np.zeros(targetShape) 
-        #numFullyCorrect = 0
         sumSquaredErrors = 0
-        for example in examples:
-            rawErrors, signedBinaryErrors = self.__evaluateExampleError(example)
-            sumSquaredErrors = sumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors)
-            #if(np.sum(signedBinaryErrors) == 0):
-            #    numFullyCorrect = numFullyCorrect + 1 
+        
+        for i in range(0,len(examples)):
+            example = examples[i]
+            output = outputs[i]
+            rawErrors = output - example.targets
+            signedBinaryErrors = np.rint(output) - example.targets # 0 => Correct (TP or TN); +1 => Wrong (FP); -1 => Wrong (FN)    
+            sumSquaredErrors = sumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors) 
             numTruePositives = numTruePositives + np.multiply(np.equal(signedBinaryErrors, np.zeros(targetShape)), example.targets)
             numFalsePositives = numFalsePositives + np.equal(signedBinaryErrors, np.ones(targetShape))
             numTrueNegatives = numTrueNegatives + np.multiply(np.equal(signedBinaryErrors, np.zeros(targetShape)), np.invert(example.targets))
             numFalseNegatives = numFalseNegatives + np.equal(signedBinaryErrors, np.full(targetShape, -1))
         
-        return PerformanceEvaluationResult(sumSquaredErrors, numTruePositives, numFalsePositives, numTrueNegatives, numFalseNegatives)
-    
-    
-    
-class PerformanceEvaluationResult:
-    def __init__(self, sumSquaredErrors, tp, fp, tn, fn):
         self.sumSquaredErrors = sumSquaredErrors
-        self.tp = np.array(tp)
-        self.fp = np.array(fp)
-        self.tn = np.array(tn)
-        self.fn = np.array(fn)
+        self.tp = numTruePositives
+        self.tn = numTrueNegatives
+        self.fp = numFalsePositives
+        self.fn = numFalseNegatives
         self.totalCorrect = self.tp + self.tn
         self.totalWrong = self.fp + self.fn
-        self.totalExamples = self.totalCorrect + self.totalWrong
+        self.totalExamples = len(examples)
         
     def accuracy(self):
         a = np.divide(self.totalCorrect, self.totalExamples)
@@ -102,3 +116,6 @@ class PerformanceEvaluationResult:
         if r.shape == (1,1):
             return r[0][0]
         return r
+    
+    def areaUnderROC(self):
+        print 'TODO'

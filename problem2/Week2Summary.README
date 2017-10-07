@@ -1,0 +1,4 @@
+This week we finished the implementation of vectorized backpropagation, standardized our continuous inputs,
+implemented weight decay, obtained accuracy, precision, and recall measurements, implemented a convergence
+check, and made some performance enhancements. The only remaining task before we can start the experiments for
+the writeup is the area-under-ROC computation.

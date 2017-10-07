@@ -34,6 +34,13 @@ class NeuralNetworkLayer:
 		weightedSums = self.calculateInputWeightSummations(inputs)
 		layerOutputs, derivsActivationFunc = self.applyActivationFunction(weightedSums)
 		return layerOutputs, derivsActivationFunc
+	
+	def checkConvergence(self, oldBiases, oldWeights, convergenceThresh=0.001):
+		diffBiases = np.absolute(self.biases - oldBiases)
+		diffWeights = np.absolute(self.weights - oldWeights)
+		biasesConverged = (diffBiases >= convergenceThresh).sum() == 0
+		weightsConverged = (np.reshape(diffWeights,(1,-1)) >= convergenceThresh).sum() == 0
+		return (biasesConverged and weightsConverged)
 		
 	def backpropagate(self, layerInputs, derivs, downstreamBiasSensitivities, downstreamWeights, learningRate = 0.01, weightDecayFactor = 0.0):
 		# For the output layer, set downstreamBiasSensitivities to the error (output-target) and downstreamWeights to a vector of ones
@@ -47,6 +54,7 @@ class NeuralNetworkLayer:
 		biasSensitivities = np.multiply(downstreamWeights.transpose().dot(np.reshape(downstreamBiasSensitivities,(1,-1))), derivs)
 		weightSensitivities = biasSensitivities.dot(np.reshape(layerInputs,(1,-1)))
 		oldWeights = np.copy(self.weights)
+		oldBiases = np.copy(self.biases)
 		self.biases = self.biases - (learningRate * biasSensitivities)
 		self.weights = self.weights - (learningRate * weightSensitivities)
 		
