@@ -29,13 +29,12 @@ def parseCommandLine():
     return dataPath, useCrossValidation, numberOfHiddenNodes, weightDecayCoeff, numberOfTrainingIterations
 
 def computePooledAROC(listPerformanceEvalResults):
-    # WRT the first neuron in the output layer, if there is more than one
     allConfidences = []
     for pr in listPerformanceEvalResults:        
         for outputs in pr.outputs:
             allConfidences.append(outputs[0][0])
         
-    rocPoints = (len(allConfidences)+2)*[None] #[(0.0,0.0,1.0),(1.0,1.0,0.0)]
+    rocPoints = (len(allConfidences)+2)*[None]
     rocPoints[0] = (0.0,0.0,1.0)
     rocPoints[-1] = (1.0,1.0,0.0)
     appendIndex = 1
@@ -52,7 +51,7 @@ def computePooledAROC(listPerformanceEvalResults):
             totalFN = totalFN + fn
         fpRate = 0.0 if totalFP + totalTN == 0 else totalFP/(totalFP + totalTN)
         tpRate = 0.0 if totalTP + totalFN == 0 else totalTP/(totalTP + totalFN)
-        rocPoints[appendIndex] = (fpRate, tpRate, confidence)
+        rocPoints[appendIndex] = (fpRate, tpRate)
         appendIndex = appendIndex + 1                      
     
     rocPoints.sort(key=lambda tup: tup[0])
