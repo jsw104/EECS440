@@ -47,7 +47,7 @@ class NeuralNetwork:
             self._train(example.inputs, example.targets)  
         
         allLayersConverged = True
-        for i in range(0,len(self.layers)-1):
+        for i in range(0,len(self.layers)):
             allLayersConverged = allLayersConverged and self.layers[i].checkConvergence(initialBiasValues[i], initialWeightValues[i]) 
             
         return allLayersConverged  
@@ -59,63 +59,71 @@ class NeuralNetwork:
         return values       
 
     def evaluatePerformance(self, examples): 
-        outputs = []
-        for example in examples:
-            outputs.append(self.stimulateNetwork(example.inputs))
-        
-        return PerformanceEvaluationResult(examples, outputs)
+        return PerformanceEvaluation(self, examples)
     
     
-class PerformanceEvaluationResult:
+class PerformanceEvaluation:
         
-    def __init__(self, examples, outputs):
+    def __init__(self, neuralNet, examples):
+        self.neuralNet = neuralNet
         self.examples = examples
+        
+        outputs = []
+        for example in self.examples:
+            outputs.append(self.neuralNet.stimulateNetwork(example.inputs))
         self.outputs = outputs
         
-        targetShape = examples[0].targets.shape
-        numTruePositives = np.zeros(targetShape)
-        numFalsePositives = np.zeros(targetShape)
-        numTrueNegatives = np.zeros(targetShape)
-        numFalseNegatives = np.zeros(targetShape) 
         sumSquaredErrors = 0
-        
-        for i in range(0,len(examples)):
-            example = examples[i]
-            output = outputs[i]
+        for i in range(0,len(self.examples)):
+            example = self.examples[i]
+            output = self.outputs[i]
             rawErrors = output - example.targets
-            signedBinaryErrors = np.rint(output) - example.targets # 0 => Correct (TP or TN); +1 => Wrong (FP); -1 => Wrong (FN)    
             sumSquaredErrors = sumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors) 
-            numTruePositives = numTruePositives + np.multiply(np.equal(signedBinaryErrors, np.zeros(targetShape)), example.targets)
-            numFalsePositives = numFalsePositives + np.equal(signedBinaryErrors, np.ones(targetShape))
-            numTrueNegatives = numTrueNegatives + np.multiply(np.equal(signedBinaryErrors, np.zeros(targetShape)), np.invert(example.targets))
-            numFalseNegatives = numFalseNegatives + np.equal(signedBinaryErrors, np.full(targetShape, -1))
-        
         self.sumSquaredErrors = sumSquaredErrors
-        self.tp = numTruePositives
-        self.tn = numTrueNegatives
-        self.fp = numFalsePositives
-        self.fn = numFalseNegatives
-        self.totalCorrect = self.tp + self.tn
-        self.totalWrong = self.fp + self.fn
-        self.totalExamples = len(examples)
         
-    def accuracy(self):
-        a = np.divide(self.totalCorrect, self.totalExamples)
-        if a.shape == (1,1):
-            return a[0][0]
-        return a
+    def itermediateStatistics(self, decisionThresh=0.5):
+        if self.neuralNet.layers[-1].numNodesThisLayer != 1:
+            raise RuntimeError('intermediateStatistics not available with multiple-output networks')
+        else:
+            targetShape = self.examples[0].targets.shape
+            tp = 0
+            tn = 0
+            fp = 0
+            fn = 0         
+        
+            for i in range(0,len(self.examples)):
+                example = self.examples[i]
+                target = example.targets[0]
+                output = self.outputs[i][0]
+                signedBinaryError = int((1-decisionThresh)+output) - (1 if target else 0) # 0 => Correct (TP or TN); +1 => Wrong (FP); -1 => Wrong (FN)   
+                if signedBinaryError == 1:
+                    fp = fp + 1
+                elif signedBinaryError == -1:
+                    fn = fn + 1
+                elif target:
+                    tp = tp + 1
+                else:
+                    tn = tn + 1
+            
+            return tp, tn, fp, fn
+        
+    def accuracy(self, decisionThresh=0.5):
+        tp,tn,fp,fn = self.itermediateStatistics(decisionThresh)
+        numAll = tp+tn+fp+fn
+        if numAll == 0:
+            return 0.0
+        return float(tp+tn)/(tp+tn+fp+fn)
     
-    def precision(self):
-        p = np.divide(self.tp, self.tp+self.fp)
-        if p.shape == (1,1):
-            return p[0][0]
-        return p
+    def precision(self, decisionThresh=0.5):
+        tp,tn,fp,fn = self.itermediateStatistics(decisionThresh)
+        numScoredPos = tp+fp
+        if numScoredPos == 0:
+            return 0.0
+        return float(tp)/(tp+fp)
     
-    def recall(self):
-        r = np.divide(self.tp, self.tp+self.fn)
-        if r.shape == (1,1):
-            return r[0][0]
-        return r
-    
-    def areaUnderROC(self):
-        print 'TODO'
+    def recall(self, decisionThresh=0.5):
+        tp,tn,fp,fn = self.itermediateStatistics(decisionThresh)
+        numActualPos = tp+fn
+        if numActualPos == 0:
+            return 0.0
+        return float(tp)/(tp+fn)

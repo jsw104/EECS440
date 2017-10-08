@@ -6,6 +6,7 @@ from continuousAttributeStandardizer import *
 from exampleManager import *
 from mldata import *
 from scipy.constants.codata import precision
+from numpy.lib.function_base import append
 
 # example: python ann ../testData/spam/spam 1 10 .01 10000
 def parseCommandLine():
@@ -26,6 +27,45 @@ def parseCommandLine():
         numberOfTrainingIterations = -1  # But it's more convenient to represent this as a -1 internally
         
     return dataPath, useCrossValidation, numberOfHiddenNodes, weightDecayCoeff, numberOfTrainingIterations
+
+def computePooledAROC(listPerformanceEvalResults):
+    # WRT the first neuron in the output layer, if there is more than one
+    allConfidences = []
+    for pr in listPerformanceEvalResults:        
+        for outputs in pr.outputs:
+            allConfidences.append(outputs[0][0])
+        
+    rocPoints = (len(allConfidences)+2)*[None] #[(0.0,0.0,1.0),(1.0,1.0,0.0)]
+    rocPoints[0] = (0.0,0.0,1.0)
+    rocPoints[-1] = (1.0,1.0,0.0)
+    appendIndex = 1
+    for confidence in allConfidences:
+        totalTP = 0.0
+        totalFP = 0.0
+        totalTN = 0.0
+        totalFN = 0.0
+        for pr in listPerformanceEvalResults:
+            tp,tn,fp,fn = pr.itermediateStatistics(confidence)
+            totalTP = totalTP + tp
+            totalFP = totalFP + fp
+            totalTN = totalTN + tn
+            totalFN = totalFN + fn
+        fpRate = 0.0 if totalFP + totalTN == 0 else totalFP/(totalFP + totalTN)
+        tpRate = 0.0 if totalTP + totalFN == 0 else totalTP/(totalTP + totalFN)
+        rocPoints[appendIndex] = (fpRate, tpRate, confidence)
+        appendIndex = appendIndex + 1                      
+    
+    rocPoints.sort(key=lambda tup: tup[0])
+    
+    areaUnderROC = 0
+    for i in range(0, len(rocPoints)-1):
+        if rocPoints[i+1][0] == rocPoints[i][0]:
+            continue
+        else:
+            trapezoidArea = 0.5 * (rocPoints[i][1] + rocPoints[i+1][1]) * (rocPoints[i+1][0] - rocPoints[i][0])
+            areaUnderROC = areaUnderROC + trapezoidArea
+            
+    return areaUnderROC 
 
 class NormalizedExample:
     def __init__(self, example, schema, nominalAttributeHashes, continuousAttributeHash):
@@ -101,18 +141,28 @@ class NeuralNetworkManager:
 
         return nominalAttributeHashes, continuousAttributeHash, numUsefulFeatures
 
-    def train(self, numIterations):
+    def train(self, numIterations, debuggingOutput=True):
+        if debuggingOutput:
+            print 'useCrossValidation=' + str(self.useCrossValidation)
+            
         prs = []
         if self.useCrossValidation:
             for i in range(0, self.exampleManager.numFolds()):
+                if debuggingOutput:
+                    print '------------------------ Training on Fold ' + str(i+1) + ' ------------------------'
                 trainingExamples, testingExamples = self.exampleManager.getCrossValidationExamples(i)
-                pr = self.trainNetwork(self.neuralNetworks[i], numIterations, trainingExamples, testingExamples)
+                pr = self.trainNetwork(self.neuralNetworks[i], numIterations, trainingExamples, testingExamples, debuggingOutput=debuggingOutput)
                 prs.append(pr)
         else:
             trainingExamples, testingExamples = self.exampleManager.getUnfoldedExamples()
-            pr = self.trainNetwork(self.neuralNetworks[0], numIterations, trainingExamples, testingExamples)
+            if debuggingOutput:
+                print '------------------------ Training on Full Dataset ------------------------'
+            pr = self.trainNetwork(self.neuralNetworks[0], numIterations, trainingExamples, testingExamples, debuggingOutput=debuggingOutput)
             prs.append(pr)
-                
+         
+        if debuggingOutput:
+            print 'Computing performance statistics...'
+                   
         accuracies = []
         precisions = []
         recalls = []
@@ -127,12 +177,17 @@ class NeuralNetworkManager:
         stdPrecision = np.std(precisions)
         avgRecall = np.mean(recalls)
         stdRecall = np.std(recalls)
+        areaUnderROC = computePooledAROC(prs) 
+        
+        if debuggingOutput:
+            print '=============================================================================================='
+        
         print 'Accuracy: ' + str(avgAccuracy) + ' ' + str(stdAccuracy)
         print 'Precision: ' + str(avgPrecision) + ' ' + str(stdPrecision)
         print 'Recall: ' + str(avgRecall) + ' ' + str(stdRecall) 
-        print 'Area under ROC: ' + 'TODO'
+        print 'Area under ROC: ' + str(areaUnderROC)
 
-    def trainNetwork(self, neuralNetwork, numIterations, trainingExamples, testingExamples, debuggingOutput = True):
+    def trainNetwork(self, neuralNetwork, numIterations, trainingExamples, testingExamples, debuggingOutput=True):
         pr = neuralNetwork.evaluatePerformance(testingExamples)
         if debuggingOutput:
             print 'INITIAL: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
@@ -154,5 +209,5 @@ class NeuralNetworkManager:
 np.random.seed(12345)
 dataPath, useCrossValidation, numberOfHiddenNodes, weightDecayCoeff, numberOfTrainingIterations = parseCommandLine()
 neuralNetworkManager = NeuralNetworkManager(dataPath, numberOfHiddenNodes, weightDecayCoeff, useCrossValidation)
-neuralNetworkManager.train(numberOfTrainingIterations)
+neuralNetworkManager.train(numberOfTrainingIterations, debuggingOutput=True)
 
