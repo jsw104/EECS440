@@ -2,6 +2,7 @@ from neuralNetworkLayer import *
 import os
 from mldata import *
 import numpy as np
+from targetOutputPair import *
 
 class NeuralNetwork:
     def __init__(self, layerSizesList, numFirstLayerInputs, weightDecayCoeff):       
@@ -68,16 +69,13 @@ class PerformanceEvaluation:
         self.neuralNet = neuralNet
         self.examples = examples
         
-        outputs = []
+        self.targetOutputPairs = []
         for example in self.examples:
-            outputs.append(self.neuralNet.stimulateNetwork(example.inputs))
-        self.outputs = outputs
+            self.targetOutputPairs.append(TargetOutputPair(example.targets, self.neuralNet.stimulateNetwork(example.inputs)))
         
         sumSquaredErrors = 0
-        for i in range(0,len(self.examples)):
-            example = self.examples[i]
-            output = self.outputs[i]
-            rawErrors = output - example.targets
+        for targetOutputPair in self.targetOutputPairs:
+            rawErrors = targetOutputPair.outputs - targetOutputPair.targets
             sumSquaredErrors = sumSquaredErrors + 0.5 * np.sum(rawErrors*rawErrors) 
         self.sumSquaredErrors = sumSquaredErrors
         
@@ -91,10 +89,9 @@ class PerformanceEvaluation:
             fp = 0
             fn = 0         
         
-            for i in range(0,len(self.examples)):
-                example = self.examples[i]
-                target = example.targets[0]
-                output = self.outputs[i][0]
+            for targetOutputPair in self.targetOutputPairs:
+                target = targetOutputPair.targets[0]
+                output = targetOutputPair.outputs[0]
                 signedBinaryError = int((1-decisionThresh)+output) - (1 if target else 0) # 0 => Correct (TP or TN); +1 => Wrong (FP); -1 => Wrong (FN)   
                 if signedBinaryError == 1:
                     fp = fp + 1

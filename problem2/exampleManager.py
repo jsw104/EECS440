@@ -32,7 +32,6 @@ class ExampleManager:
         return trueClassificationArray, falseClassificationArray
 
     def getCrossValidationExamples(self, testingFoldIndex):
-        testingExamples = []
         trainingExamples = []
         testingExamples = self.foldArray[testingFoldIndex]
         for i in range(0, len(self.foldArray)):
