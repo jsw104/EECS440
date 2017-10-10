@@ -35,7 +35,7 @@ class NeuralNetworkLayer:
 		layerOutputs, derivsActivationFunc = self.applyActivationFunction(weightedSums)
 		return layerOutputs, derivsActivationFunc
 	
-	def checkConvergence(self, oldBiases, oldWeights, convergenceThresh=0.001):
+	def checkConvergence(self, oldBiases, oldWeights, convergenceThresh=0.0075):
 		diffBiases = np.absolute(self.biases - oldBiases)
 		diffWeights = np.absolute(self.weights - oldWeights)
 		biasesConverged = (diffBiases >= convergenceThresh).sum() == 0
