@@ -29,30 +29,39 @@ def parseCommandLine():
     return dataPath, useCrossValidation, numberOfHiddenNodes, weightDecayCoeff, numberOfTrainingIterations
 
 def computePooledAROC(listPerformanceEvalResults):
-    allConfidences = []
+    allTargetOutputPairs = []
     for pr in listPerformanceEvalResults:        
-        for outputs in pr.outputs:
-            allConfidences.append(outputs[0][0])
+        allTargetOutputPairs = allTargetOutputPairs + pr.targetOutputPairs
         
-    rocPoints = (len(allConfidences)+2)*[None]
+    rocPoints = (len(allTargetOutputPairs)+2)*[None]
     rocPoints[0] = (0.0,0.0,1.0)
     rocPoints[-1] = (1.0,1.0,0.0)
     appendIndex = 1
-    for confidence in allConfidences:
-        totalTP = 0.0
-        totalFP = 0.0
-        totalTN = 0.0
-        totalFN = 0.0
-        for pr in listPerformanceEvalResults:
-            tp,tn,fp,fn = pr.itermediateStatistics(confidence)
-            totalTP = totalTP + tp
-            totalFP = totalFP + fp
-            totalTN = totalTN + tn
-            totalFN = totalFN + fn
+    allTargetOutputPairs.sort(key = lambda x:x.outputs[0])
+
+    totalTP = 0.0
+    totalFP = 0.0
+    totalTN = 0.0
+    totalFN = 0.0
+    #start with threshold of zero confidence.
+    for targetOutputPair in allTargetOutputPairs:
+        if targetOutputPair.targets[0] == 1:
+            totalTP = totalTP + 1
+        else:
+            totalFP = totalFP + 1
+
+    #incrementally move confidence level over to the right
+    for targetOutputPair in allTargetOutputPairs:
+        if targetOutputPair.targets[0] == 1:
+            totalTP = totalTP - 1
+            totalFN = totalFN + 1
+        else:
+            totalFP = totalFP - 1
+            totalTN = totalTN + 1
         fpRate = 0.0 if totalFP + totalTN == 0 else totalFP/(totalFP + totalTN)
         tpRate = 0.0 if totalTP + totalFN == 0 else totalTP/(totalTP + totalFN)
         rocPoints[appendIndex] = (fpRate, tpRate)
-        appendIndex = appendIndex + 1                      
+        appendIndex = appendIndex + 1
     
     rocPoints.sort(key=lambda tup: tup[0])
     
