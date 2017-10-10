@@ -187,10 +187,15 @@ class NeuralNetworkManager:
         print 'Area under ROC: ' + str(areaUnderROC)
 
     def trainNetwork(self, neuralNetwork, numIterations, trainingExamples, testingExamples, debuggingOutput=True):
+        trainUntilConvergence = numIterations <= 0           
+            
         pr = neuralNetwork.evaluatePerformance(testingExamples)
         if debuggingOutput:
             print 'INITIAL: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
-        for i in range(0, numIterations):
+        
+        i = 0
+        while i < numIterations or trainUntilConvergence: 
+        #for i in range(0, numIterations):
             converged = neuralNetwork.executeTrainingIteration(trainingExamples)
             if debuggingOutput and (i+1) % 10 == 0:
                 pr = neuralNetwork.evaluatePerformance(testingExamples)
@@ -198,6 +203,7 @@ class NeuralNetworkManager:
             if converged:
                 print 'CONVERGED ON ITERATION ' + str(i)
                 break
+            i = i + 1
             
         pr = neuralNetwork.evaluatePerformance(testingExamples)
         if debuggingOutput:
