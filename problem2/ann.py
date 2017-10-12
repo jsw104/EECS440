@@ -203,8 +203,8 @@ class NeuralNetworkManager:
             print 'INITIAL: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
         
         i = 1
-        while i <= numIterations or trainUntilConvergence: 
-            converged = neuralNetwork.executeTrainingIteration(trainingExamples)
+        while i <= numIterations or trainUntilConvergence:            
+            converged = neuralNetwork.executeTrainingEpoch(trainingExamples)
             if debuggingOutput and i % 100 == 0:
                 pr = neuralNetwork.evaluatePerformance(testingExamples)
                 print 'AFTER ' + str(i) + ' TRAINING EPOCHS: ' + 'Sum-Squared-Errors=' + str(pr.sumSquaredErrors) + '; Accuracy=' + str(pr.accuracy()) + '; Precision=' + str(pr.precision()) + '; Recall=' + str(pr.recall())
@@ -212,7 +212,7 @@ class NeuralNetworkManager:
                 print 'Completed Training Epoch ' + str(i) 
             if converged:
                 if debuggingOutput:
-                    print 'CONVERGED ON ITERATION ' + str(i)
+                    print 'CONVERGED AFTER EPOCH ' + str(i)
                 break
             i = i + 1
             

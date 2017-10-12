@@ -13,7 +13,8 @@ class NeuralNetwork:
             self.layers.append(NeuralNetworkLayer(layerSize, numLastLayerOutputs))
             numLastLayerOutputs = layerSize
                
-        self.weightDecayCoeff = weightDecayCoeff                
+        self.weightDecayCoeff = weightDecayCoeff
+        self.learningRate = 0.01                
 
     def _train(self, inputs, targets):
         layerIndex = 0
@@ -34,15 +35,19 @@ class NeuralNetwork:
         downstreamWeights = np.ones(len(errors)) #might need to transpose this if we have multiple outputs
         while layerIndex >= 0:
             layer = self.layers[layerIndex]
-            downstreamWeights, downstreamBiasSensitivities = layer.backpropagate(layerInputs[layerIndex],layerActivationDerivs[layerIndex],downstreamBiasSensitivities,downstreamWeights,weightDecayFactor=self.weightDecayCoeff)
+            downstreamWeights, downstreamBiasSensitivities = layer.backpropagate(layerInputs[layerIndex],layerActivationDerivs[layerIndex],downstreamBiasSensitivities,downstreamWeights,learningRate=self.learningRate)
             layerIndex = layerIndex - 1
     
-    def executeTrainingIteration(self, trainingExamples):
+    def executeTrainingEpoch(self, trainingExamples):
         initialBiasValues = []
         initialWeightValues = []
         for layer in self.layers:
             initialBiasValues.append(layer.biases)
             initialWeightValues.append(layer.weights)
+            
+            if self.weightDecayCoeff > 0.0: # WEIGHT DECAY
+                layer.biases = (1 - 2*self.weightDecayCoeff*self.learningRate) * layer.biases
+                layer.weights = (1 - 2*self.weightDecayCoeff*self.learningRate) * layer.weights
             
         for example in trainingExamples:
             self._train(example.inputs, example.targets)  
@@ -52,7 +57,7 @@ class NeuralNetwork:
             allLayersConverged = allLayersConverged and self.layers[i].checkConvergence(initialBiasValues[i], initialWeightValues[i]) 
             
         return allLayersConverged  
-
+        
     def stimulateNetwork(self, inputs):
         values = inputs
         for layer in self.layers:

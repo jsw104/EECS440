@@ -8,8 +8,6 @@ class NeuralNetworkLayer:
 		self.numInputs = numInputs	
 		self.biases = np.random.uniform(-0.1,0.1,size=(numNodes,1))
 		self.weights = np.random.uniform(-0.1,0.1,size=(numNodes,numInputs))
-		#self.biases = np.zeros(shape=(numNodes,1)) #for debugging only
-		#self.weights = np.zeros(shape=(numNodes,numInputs)) #for debugging only
 		
 	def calculateInputWeightSummations(self, layerInputs):
 		layerInputs = np.reshape(layerInputs, (1,-1))
@@ -42,12 +40,8 @@ class NeuralNetworkLayer:
 		weightsConverged = (np.reshape(diffWeights,(1,-1)) >= convergenceThresh).sum() == 0
 		return (biasesConverged and weightsConverged)
 		
-	def backpropagate(self, layerInputs, derivs, downstreamBiasSensitivities, downstreamWeights, learningRate = 0.01, weightDecayFactor = 0.0):
+	def backpropagate(self, layerInputs, derivs, downstreamBiasSensitivities, downstreamWeights, learningRate=0.01):
 		# For the output layer, set downstreamBiasSensitivities to the error (output-target) and downstreamWeights to a vector of ones
-		
-		# WEIGHT DECAY
-		if(weightDecayFactor != 0.0):
-			self.weights = (1 - 2*weightDecayFactor*learningRate) * self.weights
 		
 		# VECTORIZED BACKPROPAGATION
 		derivs = np.reshape(derivs,(-1,1))
@@ -57,30 +51,6 @@ class NeuralNetworkLayer:
 		oldBiases = np.copy(self.biases)
 		self.biases = self.biases - (learningRate * biasSensitivities)
 		self.weights = self.weights - (learningRate * weightSensitivities)
-		
-		# DEBUGGING OUTPUTS
-		#print '*********************************************************'
-		#print 'layerNodes: ' + str(self.numNodesThisLayer) + '; layerInputs: ' + str(self.numInputs)
-		#print '======= layerInputs ======='
-		#print layerInputs
-		#print '======= derivs ======='
-		#print derivs
-		#print '======= downstreamBiasSensitivities ======='
-		#print downstreamBiasSensitivities
-		#print '======= downstreamWeights ======='
-		#print downstreamWeights
-		#print '======= biasSensitivities ======='
-		#print biasSensitivities
-		#print '======= weightSensitivities ======='
-		#print weightSensitivities
-		#print '======= oldBiases ======='
-		#print oldBiases
-		#print '======= biases =======' 
-		#print self.biases
-		#print '======= oldWeights ======='
-		#print oldWeights
-		#print '======= weights =======' 
-		#print self.weights
 		
 		return oldWeights, biasSensitivities
 		
