@@ -1,0 +1,2 @@
+This week we implemented the area-under-ROC calculation, fixed a bug with weight decay, 
+and ran the experiments for the write-up.
