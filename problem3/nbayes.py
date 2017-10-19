@@ -32,3 +32,4 @@ def getExamplesFromDataPath(dataPath):
 dataPath, useCrossValidation, numberOfBins, mEstimate = parseCommandLine()
 exampleSet = getExamplesFromDataPath(dataPath)
 bayesianNetwork = BayesianNetwork(exampleSet.examples, exampleSet.schema, numberOfBins, mEstimate)
+bayesianNetwork.evaluateExamples(exampleSet.examples)

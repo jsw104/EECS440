@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f8b38ae1-9332-4cba-9d98-4256eab5d259" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/problem3/bayesianBin.py" afterPath="$PROJECT_DIR$/problem3/bayesianBin.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/problem3/bayesianFeature.py" afterPath="$PROJECT_DIR$/problem3/bayesianFeature.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/problem3/bayesianNetwork.py" afterPath="$PROJECT_DIR$/problem3/bayesianNetwork.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/problem3/nbayes.py" afterPath="$PROJECT_DIR$/problem3/nbayes.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -17,7 +17,7 @@
     <SUITE FILE_PATH="coverage/EECS440$Unnamed.coverage" NAME="DTree Coverage Results" MODIFIED="1504845563070" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem1" />
     <SUITE FILE_PATH="coverage/EECS440$DTree.coverage" NAME="Neural Network Coverage Results" MODIFIED="1507179651165" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2" />
     <SUITE FILE_PATH="coverage/EECS440$Neural_Network.coverage" NAME="Neural Network Coverage Results" MODIFIED="1507923570325" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2" />
-    <SUITE FILE_PATH="coverage/EECS440$Naive_Bayes.coverage" NAME="Naive Bayes Coverage Results" MODIFIED="1508447512915" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2" />
+    <SUITE FILE_PATH="coverage/EECS440$Naive_Bayes.coverage" NAME="Naive Bayes Coverage Results" MODIFIED="1508448608210" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/problem2" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
@@ -58,8 +58,8 @@
       <file leaf-file-name="nbayes.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/problem3/nbayes.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="161">
-              <caret line="16" column="35" lean-forward="false" selection-start-line="16" selection-start-column="35" selection-end-line="16" selection-end-column="35" />
+            <state relative-caret-position="289">
+              <caret line="34" column="52" lean-forward="false" selection-start-line="34" selection-start-column="52" selection-end-line="34" selection-end-column="52" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -70,8 +70,8 @@
       <file leaf-file-name="bayesianNetwork.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/problem3/bayesianNetwork.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="15" column="8" lean-forward="false" selection-start-line="15" selection-start-column="8" selection-end-line="15" selection-end-column="8" />
+            <state relative-caret-position="274">
+              <caret line="25" column="77" lean-forward="false" selection-start-line="25" selection-start-column="77" selection-end-line="25" selection-end-column="77" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
               </folding>
@@ -82,8 +82,8 @@
       <file leaf-file-name="bayesianFeature.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/problem3/bayesianFeature.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="480">
-              <caret line="32" column="64" lean-forward="false" selection-start-line="32" selection-start-column="64" selection-end-line="32" selection-end-column="64" />
+            <state relative-caret-position="274">
+              <caret line="56" column="94" lean-forward="true" selection-start-line="56" selection-start-column="94" selection-end-line="56" selection-end-column="94" />
               <folding>
                 <element signature="e#0#20#0" expanded="true" />
               </folding>
@@ -161,10 +161,10 @@
         <option value="$PROJECT_DIR$/problem2/neuralNetwork.py" />
         <option value="$PROJECT_DIR$/problem2/ann.py" />
         <option value="$PROJECT_DIR$/problem2/neuralNetworkLayer.py" />
-        <option value="$PROJECT_DIR$/problem3/nbayes.py" />
         <option value="$PROJECT_DIR$/problem3/bayesianBin.py" />
-        <option value="$PROJECT_DIR$/problem3/bayesianFeature.py" />
+        <option value="$PROJECT_DIR$/problem3/nbayes.py" />
         <option value="$PROJECT_DIR$/problem3/bayesianNetwork.py" />
+        <option value="$PROJECT_DIR$/problem3/bayesianFeature.py" />
       </list>
     </option>
   </component>
@@ -346,6 +346,11 @@
           <line>31</line>
           <option name="timeStamp" value="74" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/problem3/bayesianFeature.py</url>
+          <line>57</line>
+          <option name="timeStamp" value="80" />
+        </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
@@ -354,7 +359,7 @@
           </properties>
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="80" />
+      <option name="time" value="81" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -678,16 +683,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/problem3/nbayes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="161">
-          <caret line="16" column="35" lean-forward="false" selection-start-line="16" selection-start-column="35" selection-end-line="16" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/problem3/bayesianBin.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="120">
@@ -696,10 +691,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/problem3/nbayes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="289">
+          <caret line="34" column="52" lean-forward="false" selection-start-line="34" selection-start-column="52" selection-end-line="34" selection-end-column="52" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/problem3/bayesianFeature.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="480">
-          <caret line="32" column="64" lean-forward="false" selection-start-line="32" selection-start-column="64" selection-end-line="32" selection-end-column="64" />
+        <state relative-caret-position="274">
+          <caret line="56" column="94" lean-forward="true" selection-start-line="56" selection-start-column="94" selection-end-line="56" selection-end-column="94" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
           </folding>
@@ -708,8 +713,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/problem3/bayesianNetwork.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="15" column="8" lean-forward="false" selection-start-line="15" selection-start-column="8" selection-end-line="15" selection-end-column="8" />
+        <state relative-caret-position="274">
+          <caret line="25" column="77" lean-forward="false" selection-start-line="25" selection-start-column="77" selection-end-line="25" selection-end-column="77" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
           </folding>
