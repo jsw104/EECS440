@@ -13,3 +13,4 @@ class BayesianNetwork:
             if schema.features[i].type == Feature.Type.NOMINAL or schema.features[
                 i].type == Feature.Type.BINARY or schema.features[i].type == Feature.Type.CONTINUOUS:
                 bayesianFeatures[i] = BayesianFeature(trainingExamples, i, schema.features[i].type, self.numberOfBins)
+        
