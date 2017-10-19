@@ -14,7 +14,7 @@ def parseCommandLine():
         raise ValueError('The data path must be a string')
 
     useCrossValidation = int(sys.argv[2]) == 0
-    numberOfBins = int(sys.argv[3]) == 0
+    numberOfBins = int(sys.argv[3])
     mEstimate = int(sys.argv[4])
 
     if numberOfBins < 2:

@@ -1,18 +1,18 @@
 from mldata import *
 from bayesianBin import *
-class BayesianFeature
+class BayesianFeature:
     def __init__(self, examples, featureIndex, featureType, numberOfBins):
         self.countersForClassification = {}
         self.featureIndex = featureIndex
         self.featureType = featureType
         self.numberOfBins = numberOfBins
         if self.featureType == Feature.Type.CONTINUOUS:
-            self.bins = []
+            self.bins = {}
             self.createBins(examples)
-        self.calculateProbabilities(examples, featureIndex)
+        self.calculateProbabilities(examples)
 
     def calculateProbabilities(self, examples):
-
+        print "do something"
 
     def createBins(self, examples):
         if self.featureType == Feature.Type.CONTINUOUS:

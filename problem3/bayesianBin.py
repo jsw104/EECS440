@@ -5,4 +5,4 @@ class BayesianBin:
         self.maximumValue = maximumValue
 
     def belongsInBin(self, value):
-        return (value >= self.minimumValue && value < self.maximumValue)
+        return (value >= self.minimumValue and value < self.maximumValue)

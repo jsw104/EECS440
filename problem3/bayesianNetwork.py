@@ -8,8 +8,8 @@ class BayesianNetwork:
         self.constructFeatureProbabilities(trainingExamples, schema)
 
     def constructFeatureProbabilities(self, trainingExamples, schema):
-        bayesianFeatures = []
+        bayesianFeatures = {}
         for i in range(0, len(schema.features)):
             if schema.features[i].type == Feature.Type.NOMINAL or schema.features[
                 i].type == Feature.Type.BINARY or schema.features[i].type == Feature.Type.CONTINUOUS:
-                bayesianFeatures[i] = BayesianFeature(trainingExamples, i, self.numberOfBins)
+                bayesianFeatures[i] = BayesianFeature(trainingExamples, i, schema.features[i].type, self.numberOfBins)
