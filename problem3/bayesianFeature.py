@@ -54,5 +54,18 @@ class BayesianFeature:
     def probabilityOfAttributeGivenClassification(self, attribute, classification):
         if self.featureType == Feature.Type.CONTINUOUS:
             binIndex = self.binIndexForValue(attribute)
-            return self.countersForClassification[classification][binIndex]/len(self.examples)
-        return self.countersForClassification[classification][attribute]/len(self.examples)
+            if binIndex not in self.countersForClassification[classification]:
+                return 0
+            return float(self.countersForClassification[classification][binIndex])/float(len(self.examples))
+        if attribute not in self.countersForClassification[classification]:
+            return 0
+        return float(self.countersForClassification[classification][attribute])/float(len(self.examples))
+
+    def probabilityOfAttribute(self, attribute):
+        totalAttributeCount = 0
+        key = attribute
+        if self.featureType == Feature.Type.CONTINUOUS:
+            key = self.binIndexForValue(attribute)
+        for classification in self.countersForClassification:
+            totalAttributeCount = totalAttributeCount + self.countersForClassification[classification][key]
+        return float(totalAttributeCount)/float(len(self.examples))
