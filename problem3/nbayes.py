@@ -1,11 +1,13 @@
 import sys
 import os
+import random
 from mldata import *
 from bayesianNetwork import *
+from exampleManager import *
 
 # example: python nbayes ../testData/spam/spam 1 5 0
 def parseCommandLine():
-    # sys.argv[0] is the name of the script so we need 6 args for 5 options.
+    # sys.argv[0] is the name of the script so we need 5 args for 4 options.
     if (len(sys.argv) is not 5):
         raise ValueError('You must run with 4 options.')
 
@@ -29,7 +31,24 @@ def getExamplesFromDataPath(dataPath):
     exampleSet = parse_c45(fileName, rootDirectory)
     return exampleSet
 
+random.seed(12345)
 dataPath, useCrossValidation, numberOfBins, mEstimate = parseCommandLine()
 exampleSet = getExamplesFromDataPath(dataPath)
-bayesianNetwork = BayesianNetwork(exampleSet.examples, exampleSet.schema, numberOfBins, mEstimate)
-bayesianNetwork.evaluateExamples(exampleSet.examples)
+
+accuracies = []
+precisions = []
+recalls = []
+
+exampleManager = ExampleManager(exampleSet.examples, useCrossValidation)
+if not useCrossValidation:
+    trainingExamples, testExamples = exampleManager.getUnfoldedExamples()
+    bayesianNetwork = BayesianNetwork(trainingExamples, exampleSet.schema, numberOfBins, mEstimate)
+    bayesianNetwork.evaluateExamples(testExamples)
+
+else:
+    for i in range(0, exampleManager.numFolds()):
+        trainingExamples, testExamples = exampleManager.getCrossValidationExamples(i)
+        bayesianNetwork = BayesianNetwork(trainingExamples, exampleSet.schema, numberOfBins, mEstimate)
+        bayesianNetwork.evaluateExamples(testExamples) 
+
+
