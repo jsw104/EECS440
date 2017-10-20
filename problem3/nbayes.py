@@ -1,6 +1,7 @@
 import sys
 import os
 import random
+import numpy as np
 from mldata import *
 from bayesianNetwork import *
 from exampleManager import *
@@ -31,6 +32,12 @@ def getExamplesFromDataPath(dataPath):
     exampleSet = parse_c45(fileName, rootDirectory)
     return exampleSet
 
+def computeStatistics(tp, fp, tn, fn):
+    accuracy = float(tp+tn)/(tp+tn+fp+fn)
+    precision = float(tp)/(tp+fp)
+    recall = float(tp)/(tp+fn)
+    return accuracy, precision, recall
+
 random.seed(12345)
 dataPath, useCrossValidation, numberOfBins, mEstimate = parseCommandLine()
 exampleSet = getExamplesFromDataPath(dataPath)
@@ -43,12 +50,30 @@ exampleManager = ExampleManager(exampleSet.examples, useCrossValidation)
 if not useCrossValidation:
     trainingExamples, testExamples = exampleManager.getUnfoldedExamples()
     bayesianNetwork = BayesianNetwork(trainingExamples, exampleSet.schema, numberOfBins, mEstimate)
-    bayesianNetwork.evaluateExamples(testExamples)
+    tp, fp, tn, fn = bayesianNetwork.evaluateExamples(testExamples)
+    accuarcy, precision, recall = computeStatistics(tp, fp, tn, fn)
+    accuracies.append(accuarcy)
+    precisions.append(precision)
+    recalls.append(recall)
 
 else:
     for i in range(0, exampleManager.numFolds()):
         trainingExamples, testExamples = exampleManager.getCrossValidationExamples(i)
         bayesianNetwork = BayesianNetwork(trainingExamples, exampleSet.schema, numberOfBins, mEstimate)
-        bayesianNetwork.evaluateExamples(testExamples) 
+        tp, fp, tn, fn = bayesianNetwork.evaluateExamples(testExamples)
+        accuarcy, precision, recall = computeStatistics(tp, fp, tn, fn)
+        accuracies.append(accuarcy)
+        precisions.append(precision)
+        recalls.append(recall)
+        
+avgAccuracy = np.mean(accuracies)
+stdAccuracy = np.std(accuracies)
+avgPrecision = np.mean(precisions)
+stdPrecision = np.std(precisions)
+avgRecall = np.mean(recalls)
+stdRecall = np.std(recalls)
 
-
+print 'Accuracy: ' + str(avgAccuracy) + ' ' + str(stdAccuracy)
+print 'Precision: ' + str(avgPrecision) + ' ' + str(stdPrecision)
+print 'Recall: ' + str(avgRecall) + ' ' + str(stdRecall) 
+print 'Area under ROC: TODO!!'

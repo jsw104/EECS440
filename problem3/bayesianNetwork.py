@@ -29,16 +29,24 @@ class BayesianNetwork:
         return classificationProbabilities
 
     def evaluateExamples(self, testingExamples):
+        tp = 0
+        fp = 0
+        tn = 0
+        fn = 0
         totalCorrect = 0
         totalIncorrect = 0
         for example in testingExamples:
             classificationHypothesis = self.evaluateExample(example)
-            if classificationHypothesis == example[-1]:
-                totalCorrect = totalCorrect + 1
+            if classificationHypothesis == example[-1] and example[-1]:
+                tp = tp + 1
+            elif classificationHypothesis == example[-1] and not example[-1]:
+                tn = tn + 1
+            elif classificationHypothesis != example[-1] and example[-1]:
+                fn = fn + 1
             else:
-                totalIncorrect = totalIncorrect + 1
-        accuracy = float(totalCorrect) / float(totalCorrect + totalIncorrect)
-        print "ACCURACY IS " + str(accuracy)
+                fp = fp + 1
+                
+        return tp, fp, tn, fn
 
 
     def evaluateExample(self, example):
