@@ -33,10 +33,9 @@ class BayesianNetwork:
         fp = 0
         tn = 0
         fn = 0
-        totalCorrect = 0
-        totalIncorrect = 0
+        targetOutputPairs = []
         for example in testingExamples:
-            classificationHypothesis = self.evaluateExample(example)
+            classificationHypothesis, confidence = self.evaluateExample(example)
             if classificationHypothesis == example[-1] and example[-1]:
                 tp = tp + 1
             elif classificationHypothesis == example[-1] and not example[-1]:
@@ -45,8 +44,11 @@ class BayesianNetwork:
                 fn = fn + 1
             else:
                 fp = fp + 1
-                
-        return tp, fp, tn, fn
+        
+            confExampleIsTrue = confidence if classificationHypothesis else 1.0-confidence    
+            targetOutputPairs.append((example[-1], confExampleIsTrue))
+                   
+        return tp, fp, tn, fn, targetOutputPairs
 
 
     def evaluateExample(self, example):
@@ -55,14 +57,18 @@ class BayesianNetwork:
 
         bestClassification = None
         bestClassificationResult = -1
+        sumHypothesisResults = 0
         for classification in self.classificationProbabilities:
             attributeProbabilitiesGivenClassification = self.attributeProbabilitiesGivenClassification(example, classification)
             classificationProbability = self.classificationProbabilities[classification]
             hypothesisResult = self.performHypothesisTest(attributeProbabilitiesGivenClassification, classificationProbability)
+            sumHypothesisResults = sumHypothesisResults + hypothesisResult
             if bestClassificationResult == -1 or hypothesisResult > bestClassificationResult:
                 bestClassification = classification
                 bestClassificationResult = hypothesisResult
-        return bestClassification
+        
+        confidence = bestClassificationResult/sumHypothesisResults if sumHypothesisResults != 0 else 0.0
+        return bestClassification, confidence
 
     def performHypothesisTest(self, attributeProbabilitiesGivenClassification, classificationProbability):
         result = 1
