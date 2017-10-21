@@ -1,0 +1,4 @@
+This week we implemented nearly all of the Naive Bayes Classifier. This includes both the
+classifier logic itself and the supporting cross-validation, accuarcy, precision, recall,
+Area-under-ROC, etc. The only remaining task for the Naive Bayes half of the assignment 
+is the m-estimate.
