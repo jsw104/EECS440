@@ -51,15 +51,21 @@ class BayesianFeature:
             for i in range(0, self.numberOfBins):
                 self.bins[i] = BayesianBin(min + stepSize * i, min + stepSize * (i + 1), i == self.numberOfBins - 1)
 
-    def probabilityOfAttributeGivenClassification(self, attribute, classification):
+    def probabilityOfAttributeGivenClassification(self, attribute, classification, m):
+        examples_with_attrs_and_class = 0.0
         if self.featureType == Feature.Type.CONTINUOUS:
             binIndex = self.binIndexForValue(attribute)
-            if binIndex not in self.countersForClassification[classification]:
-                return 0
-            return float(self.countersForClassification[classification][binIndex])/float(len(self.examples))
-        if attribute not in self.countersForClassification[classification]:
-            return 0
-        return float(self.countersForClassification[classification][attribute])/float(len(self.examples))
+            if binIndex in self.countersForClassification[classification]:
+                examples_with_attrs_and_class = float(self.countersForClassification[classification][binIndex])
+        elif attribute in self.countersForClassification[classification]:
+            examples_with_attrs_and_class = float(self.countersForClassification[classification][attribute])    
+        
+        if self.featureType == Feature.Type.CONTINUOUS and self.bins is not None:
+            v = len(self.bins)
+        else:
+            v = len(self.countersForClassification[classification])
+                                        
+        return (examples_with_attrs_and_class + m*(1/float(v))) / float(len(self.examples) + m) 
 
     def probabilityOfAttribute(self, attribute):
         totalAttributeCount = 0

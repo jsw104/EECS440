@@ -81,7 +81,7 @@ class BayesianNetwork:
         attributeProbabilitiesGivenClassification = []
         for featureIndex in self.bayesianFeatures:
             attribute = example[featureIndex]
-            attributeProbabilitiesGivenClassification.append(self.bayesianFeatures[featureIndex].probabilityOfAttributeGivenClassification(attribute, classification))
+            attributeProbabilitiesGivenClassification.append(self.bayesianFeatures[featureIndex].probabilityOfAttributeGivenClassification(attribute, classification, self.mEstimate))
         return attributeProbabilitiesGivenClassification
 
     def attributeProbabilitiesForExample(self, example):
