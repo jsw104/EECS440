@@ -1,4 +1,7 @@
 import random
+from mldata import Example
+from exampleNormalization import *
+
 class ExampleManager:
     def __init__(self, examples, useCrossValidation):
         self.unfoldedExamples = examples
@@ -26,8 +29,10 @@ class ExampleManager:
         trueClassificationArray = []
         falseClassificationArray = []
         for example in examples:
-            trueClassificationArray.append(example) if example[-1] else falseClassificationArray.append(
-                example)
+            if isinstance(example, NormalizedExample):
+                trueClassificationArray.append(example) if (example.target == True) else falseClassificationArray.append(example)
+            else: #for mldata.Example types
+                trueClassificationArray.append(example) if example[-1] else falseClassificationArray.append(example)
         return trueClassificationArray, falseClassificationArray
 
     def getCrossValidationExamples(self, testingFoldIndex):
