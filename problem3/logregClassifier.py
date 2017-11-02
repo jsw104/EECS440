@@ -60,7 +60,7 @@ class LogRegClassifier():
             output, sigmoid_deriv = self.calculateOutput(example)
             
             error = output - example.target
-            dE_dBias = error
+            dE_dBias = error #bias input is always 1
             dE_dWeights = error * example.inputs
             
             if self.const_lambda != 0:
