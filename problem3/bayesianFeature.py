@@ -18,13 +18,13 @@ class BayesianFeature:
             for example in examples:
                 binIndex = self.binIndexForValue(example[self.featureIndex])
                 if binIndex not in self.countersForClassification[example[-1]]:
-                    self.countersForClassification[example[-1]][binIndex] = 0
+                    self.countersForClassification[example[-1]][binIndex] = 1
                 else:
                     self.countersForClassification[example[-1]][binIndex] = self.countersForClassification[example[-1]][binIndex] + 1
         else:
             for example in examples:
                 if example[self.featureIndex] not in self.countersForClassification[example[-1]]:
-                    self.countersForClassification[example[-1]][example[self.featureIndex]] = 0
+                    self.countersForClassification[example[-1]][example[self.featureIndex]] = 1
                 else:
                     self.countersForClassification[example[-1]][example[self.featureIndex]] = self.countersForClassification[example[-1]][example[self.featureIndex]] + 1
 
@@ -51,7 +51,7 @@ class BayesianFeature:
             for i in range(0, self.numberOfBins):
                 self.bins[i] = BayesianBin(min + stepSize * i, min + stepSize * (i + 1), i == self.numberOfBins - 1)
 
-    def probabilityOfAttributeGivenClassification(self, attribute, classification, m):
+    def probabilityOfAttributeGivenClassification(self, attribute, classification, classificationProbabilities, m):
         examples_with_attrs_and_class = 0.0
         if self.featureType == Feature.Type.CONTINUOUS:
             binIndex = self.binIndexForValue(attribute)
@@ -65,7 +65,7 @@ class BayesianFeature:
         else:
             v = len(self.countersForClassification[classification])
                                         
-        return (examples_with_attrs_and_class + m*(1/float(v))) / float(len(self.examples) + m) 
+        return (examples_with_attrs_and_class + m*(1/float(v))) / (float(len(self.examples) * classificationProbabilities[classification]) + m)
 
     def probabilityOfAttribute(self, attribute):
         totalAttributeCount = 0

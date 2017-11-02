@@ -11,8 +11,8 @@ class BayesianNetwork:
     def constructFeatureProbabilities(self, trainingExamples, schema):
         bayesianFeatures = {}
         for i in range(0, len(schema.features)):
-            if schema.features[i].type == Feature.Type.NOMINAL or schema.features[
-                i].type == Feature.Type.BINARY or schema.features[i].type == Feature.Type.CONTINUOUS:
+            if (schema.features[i].type == Feature.Type.NOMINAL or schema.features[
+                i].type == Feature.Type.BINARY or schema.features[i].type == Feature.Type.CONTINUOUS) and i > 1:
                 bayesianFeatures[i] = BayesianFeature(trainingExamples, i, schema.features[i].type, self.numberOfBins)
         return bayesianFeatures
 
@@ -20,7 +20,7 @@ class BayesianNetwork:
         classificationCounter = {}
         for example in trainingExamples:
             if example[-1] not in classificationCounter:
-                classificationCounter[example[-1]] = 0
+                classificationCounter[example[-1]] = 1
             else:
                 classificationCounter[example[-1]] = classificationCounter[example[-1]] + 1
         classificationProbabilities = {}
@@ -47,7 +47,11 @@ class BayesianNetwork:
         
             confExampleIsTrue = confidence if classificationHypothesis else 1.0-confidence    
             targetOutputPairs.append((example[-1], confExampleIsTrue))
-                   
+
+        print 'true positives: ' + str(tp)
+        print 'false positives: ' + str(fp)
+        print 'true negatives: ' + str(tn)
+        print 'false negatives: ' + str(fn)
         return tp, fp, tn, fn, targetOutputPairs
 
 
@@ -81,7 +85,7 @@ class BayesianNetwork:
         attributeProbabilitiesGivenClassification = []
         for featureIndex in self.bayesianFeatures:
             attribute = example[featureIndex]
-            attributeProbabilitiesGivenClassification.append(self.bayesianFeatures[featureIndex].probabilityOfAttributeGivenClassification(attribute, classification, self.mEstimate))
+            attributeProbabilitiesGivenClassification.append(self.bayesianFeatures[featureIndex].probabilityOfAttributeGivenClassification(attribute, classification, self.classificationProbabilities, self.mEstimate))
         return attributeProbabilitiesGivenClassification
 
     def attributeProbabilitiesForExample(self, example):
