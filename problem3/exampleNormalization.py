@@ -36,7 +36,7 @@ class ExampleNormalizer:
                         nominalAttributeHash = {}
                         self.nominalAttributeHashes[exampleSet.schema.features[i]] = nominalAttributeHash
                     if value not in nominalAttributeHash:
-                        nominalAttributeHash[value] = len(nominalAttributeHash.keys())
+                        nominalAttributeHash[value] = len(nominalAttributeHash.keys()) + 1
             elif exampleSet.schema.features[i].type == Feature.Type.CONTINUOUS:
                 self.continuousAttributeHash[exampleSet.schema.features[i]] = ContinuousAttributeStandardizer(exampleSet.examples, i)
                 

@@ -7,7 +7,7 @@ class LogRegClassifier():
         self.const_lambda = const_lambda
         self.bias = np.random.uniform(-0.1,0.1)
         self.weights = np.random.uniform(-0.1,0.1,size=(num_inputs))
-        self.learningRate = 0.025
+        self.learningRate = .0025
         
     def _sigmoid(self, x):
         if x >= 0:
@@ -26,7 +26,7 @@ class LogRegClassifier():
         absDiffBias = 1
         maxAbsDiffWeights = 1
         iterationCtr = 0
-        while absDiffBias > 0.005 or maxAbsDiffWeights > 0.005:
+        while absDiffBias > 0.015 or maxAbsDiffWeights > 0.015:
             initialBias = self.bias
             initialWeights = self.weights
             self._trainingIteration(trainingExamples)
@@ -60,11 +60,12 @@ class LogRegClassifier():
             output, sigmoid_deriv = self.calculateOutput(example)
             
             error = output - example.target
-            dE_dBias = sigmoid_deriv
-            dE_dWeights = sigmoid_deriv * example.inputs
+            dE_dBias = error
+            dE_dWeights = error * example.inputs
             
             if self.const_lambda != 0:
-                dE_dWeights = dE_dWeights + self.const_lambda * np.sqrt(self.weights.dot(self.weights))
+                dE_dWeights = dE_dWeights + self.const_lambda * self.weights
+                dE_dBias = dE_dBias + self.const_lambda * self.bias
 
-            self.bias = self.bias - (self.learningRate * dE_dBias * error)
-            self.weights = self.weights - (self.learningRate * dE_dWeights * error)
+            self.bias = self.bias - (self.learningRate * dE_dBias)
+            self.weights = self.weights - (self.learningRate * dE_dWeights)
