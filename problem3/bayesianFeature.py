@@ -64,6 +64,9 @@ class BayesianFeature:
             v = len(self.bins)
         else:
             v = len(self.countersForClassification[classification])
+        
+        if m < 0: #Use Laplace Smoothing if m < 0
+            m = v
                                         
         return (examples_with_attrs_and_class + m*(1/float(v))) / float(len(self.examples) + m) 
 
