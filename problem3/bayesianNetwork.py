@@ -67,14 +67,13 @@ class BayesianNetwork:
             attributeProbabilitiesGivenClassification = self.attributeProbabilitiesGivenClassification(example, classification)
             classificationProbability = self.classificationProbabilities[classification]
             hypothesisResult = self.performHypothesisTest(attributeProbabilitiesGivenClassification, classificationProbability)
+            
             sumHypothesisResults = sumHypothesisResults + hypothesisResult
-            if bestClassificationResult == -1 or hypothesisResult < bestClassificationResult:
+            if bestClassificationResult == -1 or hypothesisResult > bestClassificationResult:
                 bestClassification = classification
                 bestClassificationResult = hypothesisResult
 
-        #test = math.pow(2, (-bestClassificationResult + sumHypothesisResults))
-        #confidence calculation is not correct...
-        confidence = bestClassificationResult/sumHypothesisResults if sumHypothesisResults != 0 else 0.0
+        confidence = bestClassificationResult/sumHypothesisResults if sumHypothesisResults != 0 else 0.0 
         return bestClassification, confidence
 
     def performHypothesisTest(self, attributeProbabilitiesGivenClassification, classificationProbability):
@@ -82,7 +81,7 @@ class BayesianNetwork:
         for i in range(0, len(attributeProbabilitiesGivenClassification)):
             result = result - math.log(attributeProbabilitiesGivenClassification[i], 2)
         result = result - math.log(classificationProbability, 2)
-        return result
+        return math.pow(2, -1*result)
 
     def attributeProbabilitiesGivenClassification(self, example, classification):
         attributeProbabilitiesGivenClassification = []
