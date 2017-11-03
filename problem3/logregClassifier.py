@@ -58,14 +58,14 @@ class LogRegClassifier():
     def _trainingIteration(self, trainingExamples):
         for example in trainingExamples:
             output, sigmoid_deriv = self.calculateOutput(example)
+                        
+            magnitudeWeightsSquared = self.weights.dot(self.weights) + self.bias*self.bias
+            magnitudeWeights = np.sqrt(magnitudeWeightsSquared)
+            error = (output - example.target) + 0.5 * self.const_lambda * magnitudeWeightsSquared
             
-            error = output - example.target
-            dE_dBias = error #bias input is always 1
-            dE_dWeights = error * example.inputs
-            
-            if self.const_lambda != 0:
-                dE_dWeights = dE_dWeights + self.const_lambda * self.weights
-                dE_dBias = dE_dBias + self.const_lambda * self.bias
-
+            dE_dBias = sigmoid_deriv * (output - example.target) + self.const_lambda * magnitudeWeights * 2 * self.bias * (0.5 * self.const_lambda * magnitudeWeightsSquared)
+            dE_dWeights = sigmoid_deriv * (output - example.target) * example.inputs + self.const_lambda * magnitudeWeights * 2 * self.weights * (0.5 * self.const_lambda * magnitudeWeightsSquared)   
+    
             self.bias = self.bias - (self.learningRate * dE_dBias)
             self.weights = self.weights - (self.learningRate * dE_dWeights)
+            
