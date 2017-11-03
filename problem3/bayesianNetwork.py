@@ -79,6 +79,8 @@ class BayesianNetwork:
     def performHypothesisTest(self, attributeProbabilitiesGivenClassification, classificationProbability):
         result = 0
         for i in range(0, len(attributeProbabilitiesGivenClassification)):
+            if attributeProbabilitiesGivenClassification[i] == 0:
+                return 0.0 #Any one zero factor will zero this whole computation
             result = result - math.log(attributeProbabilitiesGivenClassification[i], 2)
         result = result - math.log(classificationProbability, 2)
         return math.pow(2, -1*result)
