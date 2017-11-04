@@ -1,0 +1,2 @@
+This week we implemented m-estimates for the Naive Bayes and all of the logistic regression.
+We also refactored Naive Bayes somewhat so that LogReg could share some code with it.
