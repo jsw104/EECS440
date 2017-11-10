@@ -3,11 +3,7 @@ import numpy as np
 import random
 from exampleManager import *
 from utils import *
-from dtree.dtree import DTree
-from ann.neuralNetwork import NeuralNetwork
-from nbayes.bayesianNetwork import BayesianNetwork
-from logreg.logregClassifier import LogRegClassifier
-
+from baggedClassifier import BaggedClassifier
 
 #class Classifier:
 #    def __init__(self):
@@ -16,8 +12,8 @@ from logreg.logregClassifier import LogRegClassifier
 # example: python nbayes ../testData/spam/spam 0 ann
 def parseCommandLine():
     # sys.argv[0] is the name of the script so we need 4 args for 3 options.
-    if (len(sys.argv) is not 4):
-        raise ValueError('You must run with 3 options.')
+    if (len(sys.argv) is not 5):
+        raise ValueError('You must run with 4 options.')
 
     dataPath = sys.argv[1]
     if type(dataPath) is not str:
@@ -28,14 +24,16 @@ def parseCommandLine():
     learning_alg = sys.argv[3].upper()
     if learning_alg not in ['DTREE', 'ANN', 'NBAYES', 'LOGREG']:
         raise ValueError('learning_alg must be DTREE, ANN, NBAYES, or LOGREG')
+    
+    numBags = int(sys.argv[4])
 
-    return dataPath, useCrossValidation, learning_alg
+    return dataPath, useCrossValidation, learning_alg, numBags
 
 
 
 np.random.seed(12345)
 random.seed(12345)
-dataPath, useCrossValidation, learning_alg = parseCommandLine()
+dataPath, useCrossValidation, learning_alg, numBags = parseCommandLine()
 
 exampleSet = getExamplesFromDataPath(dataPath)
 
@@ -70,18 +68,10 @@ for i in range(0, len(trainingSets)):
     testExamples = testSets[i]
     if useCrossValidation:
         print 'Processing Fold ' + str(i+1) 
-    clf = None
-    if learning_alg == 'DTREE':
-        clf = DTree(exampleSet.schema, maxDepth=1, useInformationGain=False)
-    elif learning_alg == 'ANN':
-        clf = NeuralNetwork([1], len(trainingExamples[0].inputs), weightDecayCoeff=0, maxTrainingIterations=-1)
-    elif learning_alg == 'NBAYES':
-        clf =  BayesianNetwork(exampleSet.schema, numberOfBins=15, mEstimate=1)
-    else: #learning_alg == 'LOGREG'
-        clf = LogRegClassifier(len(trainingExamples[0].inputs), const_lambda=0.01)
     
-    clf.train(trainingExamples)   
-    tp, fp, tn, fn, targetOutputPairs = clf.evaluateExamples(testExamples)
+    baggedClf = BaggedClassifier(learning_alg, numBags, exampleSet.schema) 
+    baggedClf.train(trainingExamples)   
+    tp, fp, tn, fn, targetOutputPairs = baggedClf.evaluateExamples(testExamples)
     accuarcy, precision, recall = computeStatistics(tp, fp, tn, fn)
     accuracies.append(accuarcy)
     precisions.append(precision)
