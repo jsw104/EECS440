@@ -54,10 +54,6 @@ class BayesianNetwork:
             confExampleIsTrue = confidence if classificationHypothesis else 1.0-confidence    
             targetOutputPairs.append((example[-1], confExampleIsTrue))
 
-        print 'true positives: ' + str(tp)
-        print 'false positives: ' + str(fp)
-        print 'true negatives: ' + str(tn)
-        print 'false negatives: ' + str(fn)
         return tp, fp, tn, fn, targetOutputPairs
 
 
