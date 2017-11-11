@@ -32,7 +32,8 @@ class BoostedClassifier:
             clf = self.classifiers[i]
             clf.train(examples)
             tp, tn, fp, fn, targetOutputPairs = clf.evaluateExamples(testingExamples)
+            self.createErrorResidual(testingExamples, targetOutputPairs)
 
     def createErrorResidual(self, testingExamples, targetOutputPairs):
-        for example in testingExamples:
-            print str(example.target)
+        for i in range(0, len(testingExamples)):
+            testingExamples[i][-1] = targetOutputPairs[i][0] - targetOutputPairs[i][1]
