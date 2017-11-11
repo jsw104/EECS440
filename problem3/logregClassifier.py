@@ -33,6 +33,7 @@ class LogRegClassifier():
             absDiffBias = abs(self.bias - initialBias)
             maxAbsDiffWeights = np.max(np.abs(self.weights - initialWeights))
             iterationCtr = iterationCtr + 1
+        print iterationCtr
         #print 'converged in', iterationCtr, 'iterations', 'with norm', np.sqrt(self.weights.dot(self.weights)) 
             
     def evaluateExamples(self, testExamples):
