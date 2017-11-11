@@ -65,7 +65,7 @@ for i in range(0, len(trainingSets)):
         print 'Processing Fold ' + str(i + 1)
 
     boostedClf = BoostedClassifier(learning_alg, numBags, exampleSet.schema)
-    boostedClf.train(trainingExamples)
+    boostedClf.train(trainingExamples, testExamples)
     tp, fp, tn, fn, targetOutputPairs = boostedClf.evaluateExamples(testExamples)
     accuarcy, precision, recall = computeStatistics(tp, fp, tn, fn)
     accuracies.append(accuarcy)

@@ -26,10 +26,13 @@ class BoostedClassifier:
             else:  # learning_alg == 'LOGREG'
                 self.classifiers.append(LogRegClassifier(numInputs, const_lambda=0.01))
 
-
-    def
-    def train(self, trainingExamples):
+    def train(self, trainingExamples, testingExamples):
         examples = trainingExamples
         for i in range(0, len(self.classifiers)):
             clf = self.classifiers[i]
             clf.train(examples)
+            tp, tn, fp, fn, targetOutputPairs = clf.evaluateExamples(testingExamples)
+
+    def createErrorResidual(self, testingExamples, targetOutputPairs):
+        for example in testingExamples:
+            print str(example.target)
