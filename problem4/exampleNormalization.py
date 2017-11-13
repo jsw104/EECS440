@@ -3,7 +3,12 @@ import numpy as np
 from continuousAttributeStandardizer import *
 
 class NormalizedExample:
-    def __init__(self, example, schema, nominalAttributeHashes, continuousAttributeHash):
+    def __init__(self, example, schema, nominalAttributeHashes, continuousAttributeHash, weight, learning_alg):
+        self.weight = weight
+        if(learning_alg == 'DTREE' or learning_alg == 'NBAYES'):
+            self.inputs = example[2:-1]
+            self.target = example[-1]
+            return
         inputsList = []
         for i in range(0, len(example)):
             if schema.features[i].type == Feature.Type.NOMINAL:
@@ -21,10 +26,13 @@ class NormalizedExample:
         self.inputs = np.array(inputsList)
         
 class ExampleNormalizer:      
-    def __init__(self, exampleSet):
+    def __init__(self, exampleSet, learning_alg):
+        self.learning_alg = learning_alg
         self.numUsefulFeatures = 0
         self.nominalAttributeHashes = {}
         self.continuousAttributeHash = {}
+        if learning_alg == 'DTREE' or learning_alg == 'BAYES':
+            return
         for i in range(0, len(exampleSet.schema.features)):
             nominalAttributeHash = None
             if exampleSet.schema.features[i].type == Feature.Type.NOMINAL or exampleSet.schema.features[
@@ -43,5 +51,5 @@ class ExampleNormalizer:
     def normalizeExamples(self, exampleSet):
         normalizedExamples = []
         for example in exampleSet.examples:
-            normalizedExamples.append(NormalizedExample(example, exampleSet.schema, self.nominalAttributeHashes, self.continuousAttributeHash))
+            normalizedExamples.append(NormalizedExample(example, exampleSet.schema, self.nominalAttributeHashes, self.continuousAttributeHash, 1.0 / float(len(exampleSet.examples)), self.learning_alg))
         return normalizedExamples

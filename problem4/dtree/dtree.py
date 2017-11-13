@@ -12,6 +12,7 @@ class DTree:
 
     def __init__(self, schema, maxDepth, useInformationGain):
         self.schema = schema
+        self.inputFeatures = schema.features[2:-1]
         self.useInformationGain = useInformationGain
         self.maxDepth = maxDepth
         self.rootNode = None
@@ -20,16 +21,16 @@ class DTree:
         # Identify the possible candidate tests. We pre-construct all possible nodes we may
         # place in the tree for easier bookkeeping later.
         possibleNodes = []
-        possibleSplitFinder = ContiniousAttributeSplitFinder(self.schema)
+        possibleSplitFinder = ContiniousAttributeSplitFinder()
 
-        for featureIndex in range(1, len(self.schema.features) - 1):
-            feature = self.schema.features[featureIndex]
+        for featureIndex in range(0, len(self.inputFeatures)):
+            feature = self.inputFeatures[featureIndex]
 
             if feature.type is Feature.Type.BINARY or feature.type is Feature.Type.NOMINAL:
-                possibleNodes.append(InternalNode(self.schema, featureIndex))
+                possibleNodes.append(InternalNode(featureIndex, feature))
 
             elif feature.type is Feature.Type.CONTINUOUS:
-                possibleNodes.append(InternalNode(self.schema, featureIndex))
+                possibleNodes.append(InternalNode(featureIndex, feature))
 
         overallMajorityClass, overallMajorityClassFraction = entropy.majority_class(trainingExamples)
         self.rootNode = self._buildTree(trainingExamples, self.schema, possibleNodes, self.maxDepth, overallMajorityClass)
@@ -48,25 +49,25 @@ class DTree:
         for example in examples:
             node = self.rootNode
             while hasattr(node, 'children'):
-                featureValue = example.features[node.featureIndex]
+                featureValue = example.inputs[node.featureIndex]
                 if node.featureType == Feature.Type.BINARY or node.featureType == Feature.Type.NOMINAL:
                     node = node.children[featureValue]
                 
                 elif node.featureType == Feature.Type.CONTINUOUS:
-                    if example[node.featureIndex] >= node.boundaryValue:
+                    if example.inputs[node.featureIndex] >= node.boundaryValue:
                         node = node.children['>=']
                     else:
                         node = node.children['<']
             
-            if example.features[-1] and node.classLabel:
+            if example.target and node.classLabel:
                 tp = tp + 1
-            elif (not example.features[-1]) and (not node.classLabel):
+            elif (not example.target) and (not node.classLabel):
                 tn = tn + 1
-            elif (not example.features[-1]) and node.classLabel:
+            elif (not example.target) and node.classLabel:
                 fp = fp + 1 
-            elif example.features[-1] and not node.classLabel:
+            elif example.target and not node.classLabel:
                 fn = fn + 1
-            targetOutputPairs.append((example.features[-1],node.classLabel))
+            targetOutputPairs.append((example.target,node.classLabel))
             
         return tp, fp, tn, fn, targetOutputPairs
 
@@ -166,7 +167,7 @@ class DTree:
         if not (bestNodeInformationGain > 0):
             return LeafNode(majorityClass, majorityClassFraction) #Base Case
 
-        cloneBestNode = InternalNode(bestNode.schema, bestNode.featureIndex)
+        cloneBestNode = InternalNode(bestNode.featureIndex, bestNode.feature)
         cloneBestNode.boundaryValue = bestBoundaryValue
                         
         #if self.useInformationGain:

@@ -7,8 +7,8 @@ def entropy_attribute(examples, attributeIndex):
     """
     attr_counts = {}
     for example in examples:
-        if example is not None and len(example) > 0:
-            attr = str(example[attributeIndex])
+        if example is not None and len(example.inputs) > 0:
+            attr = str(example.inputs[attributeIndex])
             if(attr not in attr_counts):
                 attr_counts[attr] = 1
             else:
@@ -30,7 +30,7 @@ def entropy_class_label(examples):
     if len(examples) == 0:
         return 0
 
-    return entropy_attribute(examples, len(examples[0])-1)
+    return entropy_attribute(examples, len(examples[0].inputs)-1)
     
 
 """Find the majority class"""
@@ -38,9 +38,9 @@ def majority_class(examples):
     
     classCounter = {}
     for example in examples:
-        if example[-1] not in classCounter:
-            classCounter[example[-1]] = 0
-        classCounter[example[-1]] = classCounter[example[-1]] + 1
+        if example.target not in classCounter:
+            classCounter[example.target] = 0
+        classCounter[example.target] = classCounter[example.target] + 1
             
     majorityClass = None
     majorityClassCount = 0

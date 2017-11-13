@@ -1,20 +1,18 @@
 
 class ContiniousAttributeSplitFinder:
-    
-    def __init__(self, schema):
-        self.schema = schema
 
     def sortFeatureValues(self, examples, featureIndex):
         featureValueCounter = {}
+        print featureIndex
         for example in examples:
-            if example[featureIndex] not in featureValueCounter:
-                featureValueCounter[example[featureIndex]] = {}
+            if example.inputs[featureIndex] not in featureValueCounter:
+                featureValueCounter[example.inputs[featureIndex]] = {}
 
-            if example[-1] not in featureValueCounter[example[featureIndex]]:
-                featureValueCounter[example[featureIndex]][example[-1]] = 0
+            if example.target not in featureValueCounter[example.inputs[featureIndex]]:
+                featureValueCounter[example.inputs[featureIndex]][example.target] = 0
 
-            featureValueCounter[example[featureIndex]][example[-1]] = featureValueCounter[example[featureIndex]][
-                                                                          example[-1]] + 1
+            featureValueCounter[example.inputs[featureIndex]][example.target] = featureValueCounter[example.inputs[featureIndex]][
+                                                                          example.target] + 1
         return sorted(featureValueCounter.keys()), featureValueCounter
 
     def findPossibleSplitValues(self, examples, featureIndex):

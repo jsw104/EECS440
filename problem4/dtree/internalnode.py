@@ -5,11 +5,11 @@ from boundary import *
 
 class InternalNode:
     
-    def __init__(self, schema, featureIndex):
+    def __init__(self, featureIndex, feature):
         self.parent = None
-        self.schema = schema
         self.featureIndex = int(featureIndex)
-        self.featureType = self.schema.features[self.featureIndex].type
+        self.feature = feature
+        self.featureType = feature.type
         self.boundaryValue = None
         self.children = {}
     
@@ -40,19 +40,18 @@ class InternalNode:
         Find the bins if the provided examples are split using this node's feature. Does not modify any attributes of self
         """
 
-        feature = self.schema.features[self.featureIndex]
         binnedExamples = {}
         bestSplitFeatureValue = -1
 
-        if feature.type is Feature.Type.BINARY or feature.type is Feature.Type.NOMINAL:
-            for featureValue in feature.values:
+        if self.featureType is Feature.Type.BINARY or self.featureType is Feature.Type.NOMINAL:
+            for featureValue in self.feature.values:
                 binnedExamples[featureValue] = []
                 
             for example in examples: 
-                binnedExamples[example.features[self.featureIndex]].append(example)
+                binnedExamples[example.inputs[self.featureIndex]].append(example)
     
-        elif feature.type is Feature.Type.CONTINUOUS:
-            possibleSplitFinder = ContiniousAttributeSplitFinder(self.schema)
+        elif self.featureType is Feature.Type.CONTINUOUS:
+            possibleSplitFinder = ContiniousAttributeSplitFinder()
             sortedFeatureValues, featureValueCounter = possibleSplitFinder.sortFeatureValues(examples, self.featureIndex)
             currentBoundary = Boundary(sortedFeatureValues[0], len(examples))
             for featureValue in sortedFeatureValues:
@@ -84,7 +83,7 @@ class InternalNode:
             binnedExamples["<"] = []
 
             for example in examples:
-                if example[self.featureIndex] >= bestSplitFeatureValue:
+                if example.inputs[self.featureIndex] >= bestSplitFeatureValue:
                     binnedExamples[">="].append(example)
                 else:
                     binnedExamples["<"].append(example)

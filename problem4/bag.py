@@ -37,13 +37,9 @@ dataPath, useCrossValidation, learning_alg, numBags = parseCommandLine()
 
 exampleSet = getExamplesFromDataPath(dataPath)
 
-exampleManager = None
-if learning_alg == 'DTREE' or learning_alg == 'NBAYES':
-    exampleManager = ExampleManager(exampleSet.examples, useCrossValidation)
-else:
-    exampleNormalizer = ExampleNormalizer(exampleSet)
-    normalizedExamples = exampleNormalizer.normalizeExamples(exampleSet)
-    exampleManager = ExampleManager(normalizedExamples, useCrossValidation)
+exampleNormalizer = ExampleNormalizer(exampleSet, learning_alg)
+normalizedExamples = exampleNormalizer.normalizeExamples(exampleSet)
+exampleManager = ExampleManager(normalizedExamples, useCrossValidation)
 
 trainingSets = []
 testSets = []
