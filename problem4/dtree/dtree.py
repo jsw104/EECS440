@@ -11,7 +11,6 @@ import random
 class DTree:
 
     def __init__(self, schema, maxDepth, useInformationGain):
-        self.schema = schema
         self.inputFeatures = schema.features[2:-1]
         self.useInformationGain = useInformationGain
         self.maxDepth = maxDepth
@@ -33,7 +32,7 @@ class DTree:
                 possibleNodes.append(InternalNode(featureIndex, feature))
 
         overallMajorityClass, overallMajorityClassFraction = entropy.majority_class(trainingExamples)
-        self.rootNode = self._buildTree(trainingExamples, self.schema, possibleNodes, self.maxDepth, overallMajorityClass)
+        self.rootNode = self._buildTree(trainingExamples, possibleNodes, self.maxDepth, overallMajorityClass)
 
     def evaluateExamples(self, examples):
         if self.rootNode is None:
@@ -118,7 +117,7 @@ class DTree:
             possibleSplitNodes.remove(bestNode)
             #print 'removed ' + str(bestNode.schema.features[bestNode.featureIndex].name)
     
-    def _buildTree(self, examples, schema, possibleSplitNodes, depthRemaining, parentMajorityClass):
+    def _buildTree(self, examples, possibleSplitNodes, depthRemaining, parentMajorityClass):
         initialClassLabelEntropy = entropy.entropy_class_label(examples)
         #print('len(possibleSplitNodes)=' + str(len(possibleSplitNodes)))
         #Check for empty node
@@ -184,7 +183,7 @@ class DTree:
             self._removeUnnecessaryNodes(newPossibleSplitNodes, bestNode)
             
             #Recurse and add result as child node
-            childNode = self._buildTree(binnedExamples, schema, newPossibleSplitNodes, depthRemaining, majorityClass)
+            childNode = self._buildTree(binnedExamples, newPossibleSplitNodes, depthRemaining, majorityClass)
             cloneBestNode.addChild(childNode, bin)          
               
         return cloneBestNode    
