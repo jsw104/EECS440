@@ -1,9 +1,9 @@
 from mldata import *
 from bayesianBin import *
 class BayesianFeature:
-    def __init__(self, examples, featureIndex, featureType, numberOfBins):
+    def __init__(self, examples, inputIndex, featureType, numberOfBins):
         self.countersForClassification = {}
-        self.featureIndex = featureIndex
+        self.inputIndex = inputIndex
         self.featureType = featureType
         self.numberOfBins = numberOfBins
         self.examples = examples
@@ -16,22 +16,22 @@ class BayesianFeature:
         self.determinePossibleClassifications(examples)
         if self.featureType == Feature.Type.CONTINUOUS:
             for example in examples:
-                binIndex = self.binIndexForValue(example[self.featureIndex])
-                if binIndex not in self.countersForClassification[example[-1]]:
-                    self.countersForClassification[example[-1]][binIndex] = 1
+                binIndex = self.binIndexForValue(example.inputs[self.inputIndex])
+                if binIndex not in self.countersForClassification[example.target]:
+                    self.countersForClassification[example.target][binIndex] = 1
                 else:
-                    self.countersForClassification[example[-1]][binIndex] = self.countersForClassification[example[-1]][binIndex] + 1
+                    self.countersForClassification[example.target][binIndex] = self.countersForClassification[example.target][binIndex] + 1
         else:
             for example in examples:
-                if example[self.featureIndex] not in self.countersForClassification[example[-1]]:
-                    self.countersForClassification[example[-1]][example[self.featureIndex]] = 1
+                if example.inputs[self.inputIndex] not in self.countersForClassification[example.target]:
+                    self.countersForClassification[example.target][example.inputs[self.inputIndex]] = 1
                 else:
-                    self.countersForClassification[example[-1]][example[self.featureIndex]] = self.countersForClassification[example[-1]][example[self.featureIndex]] + 1
+                    self.countersForClassification[example.target][example.inputs[self.inputIndex]] = self.countersForClassification[example.target][example.inputs[self.inputIndex]] + 1
 
     def determinePossibleClassifications(self, examples):
         for example in examples:
-            if example[-1] not in self.countersForClassification:
-                self.countersForClassification[example[-1]] = {}
+            if example.target not in self.countersForClassification:
+                self.countersForClassification[example.target] = {}
 
     def binIndexForValue(self, value):
         for i in range(0, len(self.bins)):
@@ -40,13 +40,13 @@ class BayesianFeature:
 
     def createBins(self, examples):
         if self.featureType == Feature.Type.CONTINUOUS:
-            min = examples[0][self.featureIndex]
-            max = examples[0][self.featureIndex]
+            min = examples[0].inputs[self.inputIndex]
+            max = examples[0].inputs[self.inputIndex]
             for example in examples:
-                if example[self.featureIndex] < min:
-                    min = example[self.featureIndex]
-                elif example[self.featureIndex] > max:
-                    max = example[self.featureIndex]
+                if example.inputs[self.inputIndex] < min:
+                    min = example.inputs[self.inputIndex]
+                elif example.inputs[self.inputIndex] > max:
+                    max = example.inputs[self.inputIndex]
             stepSize = (float(max) - float(min)) / float(self.numberOfBins)
             for i in range(0, self.numberOfBins):
                 self.bins[i] = BayesianBin(min + stepSize * i, min + stepSize * (i + 1), i == self.numberOfBins - 1)

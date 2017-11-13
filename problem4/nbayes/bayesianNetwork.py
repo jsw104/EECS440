@@ -4,31 +4,31 @@ import math
 class BayesianNetwork:
 
     def __init__(self, schema, numberOfBins, mEstimate):
-        self.schema = schema
+        self.inputFeatures = schema.features[1:-1]
         self.numberOfBins = numberOfBins
         self.mEstimate = mEstimate
         self.bayesianFeatures = None
         self.classificationProbabilities = None
         
     def train(self, trainingExamples):
-        self.bayesianFeatures = self._constructFeatureProbabilities(trainingExamples, self.schema)
+        self.bayesianFeatures = self._constructFeatureProbabilities(trainingExamples)
         self.classificationProbabilities = self._constructClassificationProbabilities(trainingExamples)
 
-    def _constructFeatureProbabilities(self, trainingExamples, schema):
+    def _constructFeatureProbabilities(self, trainingExamples):
         bayesianFeatures = {}
-        for i in range(0, len(schema.features)):
-            if (schema.features[i].type == Feature.Type.NOMINAL or schema.features[
-                i].type == Feature.Type.BINARY or schema.features[i].type == Feature.Type.CONTINUOUS) and i > 1:
-                bayesianFeatures[i] = BayesianFeature(trainingExamples, i, schema.features[i].type, self.numberOfBins)
+        for i in range(0, len(self.inputFeatures)):
+            if (self.inputFeatures[i].type == Feature.Type.NOMINAL or self.inputFeatures[
+                i].type == Feature.Type.BINARY or self.inputFeatures[i].type == Feature.Type.CONTINUOUS) and i > 1:
+                bayesianFeatures[i] = BayesianFeature(trainingExamples, i, self.inputFeatures[i].type, self.numberOfBins)
         return bayesianFeatures
 
     def _constructClassificationProbabilities(self, trainingExamples):
         classificationCounter = {}
         for example in trainingExamples:
-            if example[-1] not in classificationCounter:
-                classificationCounter[example[-1]] = 1
+            if example.target not in classificationCounter:
+                classificationCounter[example.target] = 1
             else:
-                classificationCounter[example[-1]] = classificationCounter[example[-1]] + 1
+                classificationCounter[example.target] = classificationCounter[example.target] + 1
         classificationProbabilities = {}
         for classification in classificationCounter:
             classificationProbabilities[classification] = float(classificationCounter[classification])/float(len(trainingExamples))
@@ -42,17 +42,17 @@ class BayesianNetwork:
         targetOutputPairs = []
         for example in testingExamples:
             classificationHypothesis, confidence = self.evaluateExample(example)
-            if classificationHypothesis == example[-1] and example[-1]:
+            if classificationHypothesis == example.target and example.target:
                 tp = tp + 1
-            elif classificationHypothesis == example[-1] and not example[-1]:
+            elif classificationHypothesis == example.target and not example.target:
                 tn = tn + 1
-            elif classificationHypothesis != example[-1] and example[-1]:
+            elif classificationHypothesis != example.target and example.target:
                 fn = fn + 1
             else:
                 fp = fp + 1
         
             confExampleIsTrue = confidence if classificationHypothesis else 1.0-confidence    
-            targetOutputPairs.append((example[-1], confExampleIsTrue))
+            targetOutputPairs.append((example.target, confExampleIsTrue))
 
         return tp, fp, tn, fn, targetOutputPairs
 
@@ -89,7 +89,7 @@ class BayesianNetwork:
     def attributeProbabilitiesGivenClassification(self, example, classification):
         attributeProbabilitiesGivenClassification = []
         for featureIndex in self.bayesianFeatures:
-            attribute = example[featureIndex]
+            attribute = example.inputs[featureIndex]
             attributeProbabilitiesGivenClassification.append(self.bayesianFeatures[featureIndex].probabilityOfAttributeGivenClassification(attribute, classification, self.classificationProbabilities, self.mEstimate))
         return attributeProbabilitiesGivenClassification
 
