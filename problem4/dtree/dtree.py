@@ -11,7 +11,7 @@ import random
 class DTree:
 
     def __init__(self, schema, maxDepth, useInformationGain):
-        self.inputFeatures = schema.features[2:-1]
+        self.inputFeatures = schema.features[1:-1]
         self.useInformationGain = useInformationGain
         self.maxDepth = maxDepth
         self.rootNode = None

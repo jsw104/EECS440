@@ -6,7 +6,7 @@ class NormalizedExample:
     def __init__(self, example, schema, nominalAttributeHashes, continuousAttributeHash, weight, learning_alg):
         self.weight = weight
         if(learning_alg == 'DTREE' or learning_alg == 'NBAYES'):
-            self.inputs = example[2:-1]
+            self.inputs = example[1:-1]
             self.target = example[-1]
             return
         inputsList = []
