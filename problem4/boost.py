@@ -3,7 +3,7 @@ import numpy as np
 import random
 from exampleManager import *
 from utils import *
-from boostedClassifier import BoostedClassifier
+from boostedClassifier import *
 
 # example: python nbayes ../testData/spam/spam 0 ann
 def parseCommandLine():
@@ -28,17 +28,13 @@ def parseCommandLine():
 
 np.random.seed(12345)
 random.seed(12345)
-dataPath, useCrossValidation, learning_alg, numBags = parseCommandLine()
+dataPath, useCrossValidation, learning_alg, numIterations = parseCommandLine()
 
 exampleSet = getExamplesFromDataPath(dataPath)
 
-exampleManager = None
-if learning_alg == 'DTREE' or learning_alg == 'NBAYES':
-    exampleManager = ExampleManager(exampleSet.examples, useCrossValidation)
-else:
-    exampleNormalizer = ExampleNormalizer(exampleSet)
-    normalizedExamples = exampleNormalizer.normalizeExamples(exampleSet)
-    exampleManager = ExampleManager(normalizedExamples, useCrossValidation)
+exampleNormalizer = ExampleNormalizer(exampleSet, learning_alg)
+normalizedExamples = exampleNormalizer.normalizeExamples(exampleSet)
+exampleManager = ExampleManager(normalizedExamples, useCrossValidation)
 
 trainingSets = []
 testSets = []
@@ -64,9 +60,13 @@ for i in range(0, len(trainingSets)):
     if useCrossValidation:
         print 'Processing Fold ' + str(i + 1)
 
-    boostedClf = BoostedClassifier(learning_alg, numBags, exampleSet.schema)
+    boostedClf = BoostedClassifierManager(learning_alg, numIterations, exampleSet.schema)
     boostedClf.train(trainingExamples, testExamples)
     tp, fp, tn, fn, targetOutputPairs = boostedClf.evaluateExamples(testExamples)
+    print 'tp: ' + str(tp)
+    print 'fp: ' + str(fp)
+    print 'tn: ' + str(tn)
+    print 'fn: ' + str(fn)
     accuarcy, precision, recall = computeStatistics(tp, fp, tn, fn)
     accuracies.append(accuarcy)
     precisions.append(precision)

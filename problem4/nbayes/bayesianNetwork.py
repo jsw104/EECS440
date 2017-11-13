@@ -52,7 +52,7 @@ class BayesianNetwork:
                 fp = fp + 1
         
             confExampleIsTrue = confidence if classificationHypothesis else 1.0-confidence    
-            targetOutputPairs.append((example.target, confExampleIsTrue))
+            targetOutputPairs.append(list((example.target, confExampleIsTrue)))
 
         return tp, fp, tn, fn, targetOutputPairs
 

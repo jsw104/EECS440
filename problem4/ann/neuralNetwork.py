@@ -92,6 +92,6 @@ class NeuralNetwork:
                 fn = fn + 1
             else:
                 tn = tn + 1
-            targetOutputPairs.append((example.target, output))
+            targetOutputPairs.append(list((example.target, output)))
         
         return tp, fp, tn, fn, targetOutputPairs

@@ -66,7 +66,7 @@ class DTree:
                 fp = fp + 1 
             elif example.target and not node.classLabel:
                 fn = fn + 1
-            targetOutputPairs.append((example.target,node.classLabel))
+            targetOutputPairs.append(list((example.target,node.classLabel)))
             
         return tp, fp, tn, fn, targetOutputPairs
 
