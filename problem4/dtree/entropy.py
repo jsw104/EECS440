@@ -23,6 +23,25 @@ def entropy_attribute(examples, attributeIndex):
             
     return -1 * entropy
 
+def entropy_target(examples):
+    attr_counts = {}
+    for example in examples:
+        if example is not None and len(example.inputs) > 0:
+            attr = str(example.target)
+            if (attr not in attr_counts):
+                attr_counts[attr] = 1
+            else:
+                attr_counts[attr] = attr_counts[attr] + 1
+
+    entropy = 0
+
+    for attr in attr_counts:
+        attr_count = attr_counts[attr]
+        p = float(attr_count) / len(examples)
+        entropy = entropy + (p * math.log(p, 2))
+
+    return -1 * entropy
+
 def entropy_class_label(examples):
     """
     Compute the class label entropy of the example set, which is the last atrribute
@@ -30,7 +49,7 @@ def entropy_class_label(examples):
     if len(examples) == 0:
         return 0
 
-    return entropy_attribute(examples, len(examples[0].inputs)-1)
+    return entropy_target(examples)
     
 
 """Find the majority class"""

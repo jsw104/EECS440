@@ -49,12 +49,12 @@ class DTree:
         for example in examples:
             node = self.rootNode
             while hasattr(node, 'children'):
-                featureValue = example.inputs[node.featureIndex]
+                featureValue = example.inputs[node.inputIndex]
                 if node.featureType == Feature.Type.BINARY or node.featureType == Feature.Type.NOMINAL:
                     node = node.children[featureValue]
                 
                 elif node.featureType == Feature.Type.CONTINUOUS:
-                    if example.inputs[node.featureIndex] >= node.boundaryValue:
+                    if example.inputs[node.inputIndex] >= node.boundaryValue:
                         node = node.children['>=']
                     else:
                         node = node.children['<']
@@ -129,7 +129,7 @@ class DTree:
             
         #Check for pure node
         if initialClassLabelEntropy == 0:
-            classLabel = examples[0].features[-1]
+            classLabel = examples[0].target
             return LeafNode(classLabel, 1.0) #Base Case
         
         #Check for no depth remaining
@@ -167,7 +167,7 @@ class DTree:
         if not (bestNodeInformationGain > 0):
             return LeafNode(majorityClass, majorityClassFraction) #Base Case
 
-        cloneBestNode = InternalNode(bestNode.featureIndex, bestNode.feature)
+        cloneBestNode = InternalNode(bestNode.inputIndex, bestNode.feature)
         cloneBestNode.boundaryValue = bestBoundaryValue
                         
         #if self.useInformationGain:

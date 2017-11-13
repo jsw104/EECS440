@@ -1,17 +1,16 @@
 
 class ContiniousAttributeSplitFinder:
 
-    def sortFeatureValues(self, examples, featureIndex):
+    def sortFeatureValues(self, examples, inputIndex):
         featureValueCounter = {}
-        print featureIndex
         for example in examples:
-            if example.inputs[featureIndex] not in featureValueCounter:
-                featureValueCounter[example.inputs[featureIndex]] = {}
+            if example.inputs[inputIndex] not in featureValueCounter:
+                featureValueCounter[example.inputs[inputIndex]] = {}
 
-            if example.target not in featureValueCounter[example.inputs[featureIndex]]:
-                featureValueCounter[example.inputs[featureIndex]][example.target] = 0
+            if example.target not in featureValueCounter[example.inputs[inputIndex]]:
+                featureValueCounter[example.inputs[inputIndex]][example.target] = 0
 
-            featureValueCounter[example.inputs[featureIndex]][example.target] = featureValueCounter[example.inputs[featureIndex]][
+            featureValueCounter[example.inputs[inputIndex]][example.target] = featureValueCounter[example.inputs[inputIndex]][
                                                                           example.target] + 1
         return sorted(featureValueCounter.keys()), featureValueCounter
 
