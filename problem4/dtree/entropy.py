@@ -10,9 +10,9 @@ def entropy_attribute(examples, attributeIndex):
         if example is not None and len(example.inputs) > 0:
             attr = str(example.inputs[attributeIndex])
             if(attr not in attr_counts):
-                attr_counts[attr] = 1
+                attr_counts[attr] = example.weight
             else:
-                attr_counts[attr] = attr_counts[attr] + 1
+                attr_counts[attr] = attr_counts[attr] + example.weight
     
     entropy = 0
                 
@@ -29,9 +29,9 @@ def entropy_target(examples):
         if example is not None and len(example.inputs) > 0:
             attr = str(example.target)
             if (attr not in attr_counts):
-                attr_counts[attr] = 1
+                attr_counts[attr] = example.weight
             else:
-                attr_counts[attr] = attr_counts[attr] + 1
+                attr_counts[attr] = attr_counts[attr] + example.weight
 
     entropy = 0
 

@@ -29,7 +29,7 @@ class InternalNode:
             
         prospectiveEntropy = 0
         for featureValue in binnedExamples.keys():
-            prospectiveEntropy = prospectiveEntropy + (float(len(binnedExamples[featureValue])) / len(examples)) * entropy.entropy_class_label(binnedExamples[featureValue])
+            prospectiveEntropy = prospectiveEntropy + (float(sum(example.weight for example in binnedExamples[featureValue])) / float(sum(example.weight for example in examples))) * entropy.entropy_class_label(binnedExamples[featureValue])
 
         attributeEntropy = entropy.entropy_attribute(examples, self.inputIndex)
         
@@ -53,12 +53,12 @@ class InternalNode:
         elif self.featureType is Feature.Type.CONTINUOUS:
             possibleSplitFinder = ContiniousAttributeSplitFinder()
             sortedFeatureValues, featureValueCounter = possibleSplitFinder.sortFeatureValues(examples, self.inputIndex)
-            currentBoundary = Boundary(sortedFeatureValues[0], len(examples))
+            currentBoundary = Boundary(sortedFeatureValues[0], examples)
             for featureValue in sortedFeatureValues:
                 if True in featureValueCounter[featureValue]:
-                    currentBoundary.greaterThanTrueCount = currentBoundary.greaterThanTrueCount + featureValueCounter[featureValue][True]
+                    currentBoundary.greaterThanTrueWeight = currentBoundary.greaterThanTrueWeight + featureValueCounter[featureValue][True]
                 if False in featureValueCounter[featureValue]:
-                    currentBoundary.greaterThanFalseCount = currentBoundary.greaterThanFalseCount + featureValueCounter[featureValue][False]
+                    currentBoundary.greaterThanFalseWeight = currentBoundary.greaterThanFalseWeight + featureValueCounter[featureValue][False]
 
             bestSplitFeatureValueIndex = -1
             bestEntropy = -1
@@ -69,10 +69,10 @@ class InternalNode:
                     trueCount = featureValueCounter[featureValue][True]
                 if False in featureValueCounter[featureValue]:
                     falseCount = featureValueCounter[featureValue][False]
-                currentBoundary.greaterThanTrueCount = currentBoundary.greaterThanTrueCount - trueCount
-                currentBoundary.greaterThanFalseCount = currentBoundary.greaterThanFalseCount - falseCount
-                currentBoundary.lessThanTrueCount = currentBoundary.lessThanTrueCount + trueCount
-                currentBoundary.lessThanFalseCount = currentBoundary.lessThanFalseCount + falseCount
+                currentBoundary.greaterThanTrueWeight = currentBoundary.greaterThanTrueWeight - trueCount
+                currentBoundary.greaterThanFalseWeight = currentBoundary.greaterThanFalseWeight - falseCount
+                currentBoundary.lessThanTrueWeight = currentBoundary.lessThanTrueWeight + trueCount
+                currentBoundary.lessThanFalseWeight = currentBoundary.lessThanFalseWeight + falseCount
                 currentEntropy = currentBoundary.calculateLessThanEntropy() + currentBoundary.calculateGreaterThanEntropy()
                 if (bestEntropy < 0 or currentEntropy < bestEntropy):
                     bestEntropy = currentEntropy

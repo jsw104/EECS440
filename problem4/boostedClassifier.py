@@ -38,10 +38,12 @@ class BoostedClassifierManager:
             self.boostedClassifiers.append(boostedClf)
             clf = boostedClf.classifier
             clf.train(trainingExamples)
-            tp, tn, fp, fn, targetOutputPairs = clf.evaluateExamples(testingExamples)
-            boostedClf.roundOutputs(targetOutputPairs) #rounding makes outputs equal to the classifier guess
-            boostedClf.setNewClassifierWeight(testingExamples, targetOutputPairs)
-            self._updateWeights(testingExamples, targetOutputPairs, boostedClf.classifierWeight)
+            tp, tn, fp, fn, trainingTargetOutputPairs = clf.evaluateExamples(trainingExamples)
+            tp, tn, fp, fn, testingTargetOutputPairs = clf.evaluateExamples(testingExamples)
+            boostedClf.roundOutputs(trainingTargetOutputPairs) #rounding makes outputs equal to the classifier guess
+            boostedClf.roundOutputs(testingTargetOutputPairs)
+            boostedClf.setNewClassifierWeight(testingExamples, testingTargetOutputPairs)
+            self._updateWeights(trainingExamples, trainingTargetOutputPairs, boostedClf.classifierWeight)
 
     def _updateWeights(self, examples, targetOutputPairs, classifierWeight):
         newWeightSummation = 0.0
@@ -115,10 +117,10 @@ class BoostedClassifier:
             weightedTrainingError = weightedTrainingError + testingExamples[i].weight * (targetOutputPairs[i][0] != targetOutputPairs[i][1])
         return weightedTrainingError
 
-    def setNewClassifierWeight(self, testingExamples, targetOutputPairs):
-        weightedTrainingError = self._calculateWeightedTrainingError(testingExamples, targetOutputPairs)
+    def setNewClassifierWeight(self, examples, targetOutputPairs):
+        weightedTrainingError = self._calculateWeightedTrainingError(examples, targetOutputPairs)
         self.classifierWeight = 0.5 * math.log((1-weightedTrainingError)/weightedTrainingError)
 
-    def setTargetOutputPairs(self, testingExamples):
-        tp, fp, tn, fn, targetOutputPairs = self.classifier.evaluateExamples(testingExamples)
+    def setTargetOutputPairs(self, examples):
+        tp, fp, tn, fn, targetOutputPairs = self.classifier.evaluateExamples(examples)
         self.targetOutputPairs = targetOutputPairs
