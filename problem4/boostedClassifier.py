@@ -33,14 +33,32 @@ class BoostedClassifierManager:
             return BoostedClassifier(LogRegClassifier(self.numInputs, const_lambda=0.01))
 
     def train(self, trainingExamples, testingExamples):
-        examples = trainingExamples
         for i in range(0, self.totalIterations):
             boostedClf = self._createBoostedClassifier()
             self.boostedClassifiers.append(boostedClf)
             clf = boostedClf.classifier
-            clf.train(examples)
+            clf.train(trainingExamples)
             tp, tn, fp, fn, targetOutputPairs = clf.evaluateExamples(testingExamples)
+            boostedClf.roundOutputs(targetOutputPairs) #rounding makes outputs equal to the classifier guess
             boostedClf.setNewClassifierWeight(testingExamples, targetOutputPairs)
+            self._updateWeights(testingExamples, targetOutputPairs, boostedClf.classifierWeight)
+
+    def _updateWeights(self, examples, targetOutputPairs, classifierWeight):
+        newWeightSummation = 0.0
+        for exampleIndex in range(0, len(examples)):
+            exponentSign = 1.0
+            if (targetOutputPairs[exampleIndex][0] == targetOutputPairs[exampleIndex][1]):
+                exponentSign = -1.0
+            exponent = classifierWeight * exponentSign
+            newWeight = examples[exampleIndex].weight * math.exp(exponent)
+            examples[exampleIndex].weight = newWeight
+            newWeightSummation = newWeightSummation + newWeight
+
+        #normalize weights to add up to 1
+        for example in examples:
+            example.weight = example.weight / newWeightSummation
+
+
 
     def evaluateExamples(self, examples):
         classifierSummation = self._totalClassifierWeightSummation()
@@ -87,13 +105,12 @@ class BoostedClassifier:
         self.classifierWeight = -1
         self.targetOutputPairs = []
 
-    def _roundOutputs(self, targetOutputPairs):
+    def roundOutputs(self, targetOutputPairs):
         for targetOutputPair in targetOutputPairs:
             targetOutputPair[1] = round(targetOutputPair[1])
 
     def _calculateWeightedTrainingError(self, testingExamples, targetOutputPairs):
         weightedTrainingError = 0.0
-        self._roundOutputs(targetOutputPairs)
         for i in range(0, len(targetOutputPairs)):
             weightedTrainingError = weightedTrainingError + testingExamples[i].weight * (targetOutputPairs[i][0] != targetOutputPairs[i][1])
         return weightedTrainingError

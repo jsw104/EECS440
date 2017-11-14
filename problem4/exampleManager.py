@@ -48,3 +48,5 @@ class ExampleManager:
 
     def numFolds(self):
         return self.numberOfFolds
+
+
