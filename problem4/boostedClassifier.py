@@ -33,16 +33,15 @@ class BoostedClassifierManager:
             return BoostedClassifier(LogRegClassifier(self.numInputs, const_lambda=0.01))
 
     def train(self, trainingExamples, testingExamples):
+        self._normalizeWeights(trainingExamples)
         for i in range(0, self.totalIterations):
             boostedClf = self._createBoostedClassifier()
             self.boostedClassifiers.append(boostedClf)
             clf = boostedClf.classifier
             clf.train(trainingExamples)
             tp, tn, fp, fn, trainingTargetOutputPairs = clf.evaluateExamples(trainingExamples)
-            tp, tn, fp, fn, testingTargetOutputPairs = clf.evaluateExamples(testingExamples)
             boostedClf.roundOutputs(trainingTargetOutputPairs) #rounding makes outputs equal to the classifier guess
-            boostedClf.roundOutputs(testingTargetOutputPairs)
-            boostedClf.setNewClassifierWeight(testingExamples, testingTargetOutputPairs)
+            boostedClf.setNewClassifierWeight(trainingExamples, trainingTargetOutputPairs)
             self._updateWeights(trainingExamples, trainingTargetOutputPairs, boostedClf.classifierWeight)
 
     def _updateWeights(self, examples, targetOutputPairs, classifierWeight):
@@ -60,7 +59,12 @@ class BoostedClassifierManager:
         for example in examples:
             example.weight = example.weight / newWeightSummation
 
-
+    def _normalizeWeights(self, examples):
+        weightSummation = 0.0
+        for example in examples:
+            weightSummation = weightSummation + example.weight
+        for example in examples:
+            example.weight = example.weight / weightSummation
 
     def evaluateExamples(self, examples):
         for bclf in self.boostedClassifiers:
@@ -115,6 +119,8 @@ class BoostedClassifier:
         weightedTrainingError = 0.0
         for i in range(0, len(targetOutputPairs)):
             weightedTrainingError = weightedTrainingError + testingExamples[i].weight * (targetOutputPairs[i][0] != targetOutputPairs[i][1])
+        if weightedTrainingError <= 0 or weightedTrainingError >= 0.5:
+            print 'we have converged'
         return weightedTrainingError
 
     def setNewClassifierWeight(self, examples, targetOutputPairs):
