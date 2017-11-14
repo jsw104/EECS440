@@ -47,7 +47,8 @@ class ExampleNormalizer:
                         nominalAttributeHash[value] = len(nominalAttributeHash.keys()) + 1
             elif exampleSet.schema.features[i].type == Feature.Type.CONTINUOUS:
                 self.continuousAttributeHash[exampleSet.schema.features[i]] = ContinuousAttributeStandardizer(exampleSet.examples, i)
-                
+
+    #TODO might need to change initial weight for normalized examples based on if boosting or not
     def normalizeExamples(self, exampleSet):
         normalizedExamples = []
         for example in exampleSet.examples:

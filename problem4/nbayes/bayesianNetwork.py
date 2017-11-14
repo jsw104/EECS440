@@ -26,9 +26,9 @@ class BayesianNetwork:
         classificationCounter = {}
         for example in trainingExamples:
             if example.target not in classificationCounter:
-                classificationCounter[example.target] = 1
+                classificationCounter[example.target] = example.weight
             else:
-                classificationCounter[example.target] = classificationCounter[example.target] + 1
+                classificationCounter[example.target] = classificationCounter[example.target] + example.weight
         classificationProbabilities = {}
         for classification in classificationCounter:
             classificationProbabilities[classification] = float(classificationCounter[classification])/float(len(trainingExamples))

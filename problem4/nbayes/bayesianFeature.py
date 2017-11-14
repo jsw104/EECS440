@@ -18,15 +18,15 @@ class BayesianFeature:
             for example in examples:
                 binIndex = self.binIndexForValue(example.inputs[self.inputIndex])
                 if binIndex not in self.countersForClassification[example.target]:
-                    self.countersForClassification[example.target][binIndex] = 1
+                    self.countersForClassification[example.target][binIndex] = example.weight
                 else:
-                    self.countersForClassification[example.target][binIndex] = self.countersForClassification[example.target][binIndex] + 1
+                    self.countersForClassification[example.target][binIndex] = self.countersForClassification[example.target][binIndex] + example.weight
         else:
             for example in examples:
                 if example.inputs[self.inputIndex] not in self.countersForClassification[example.target]:
                     self.countersForClassification[example.target][example.inputs[self.inputIndex]] = 1
                 else:
-                    self.countersForClassification[example.target][example.inputs[self.inputIndex]] = self.countersForClassification[example.target][example.inputs[self.inputIndex]] + 1
+                    self.countersForClassification[example.target][example.inputs[self.inputIndex]] = self.countersForClassification[example.target][example.inputs[self.inputIndex]] + example.weight
 
     def determinePossibleClassifications(self, examples):
         for example in examples:

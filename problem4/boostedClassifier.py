@@ -61,7 +61,6 @@ class BoostedClassifierManager:
 
 
     def evaluateExamples(self, examples):
-        classifierSummation = self._totalClassifierWeightSummation()
         for bclf in self.boostedClassifiers:
             bclf.setTargetOutputPairs(examples)
 
@@ -72,7 +71,7 @@ class BoostedClassifierManager:
         targetOutputPairs = []
 
         for i in range(0, len(examples)):
-            evaluationFunctionResult = self._evalutaionFunction(i, bclf.classifierWeight, classifierSummation, self.boostedClassifiers)
+            evaluationFunctionResult = self._evaluationFunction(i, self.boostedClassifiers)
             output = round(evaluationFunctionResult)
             target = examples[i].target
             targetOutputPairs.append(list((target, output)))
@@ -87,10 +86,11 @@ class BoostedClassifierManager:
         return tp, fp, tn, fn, targetOutputPairs
 
 
-    def _evalutaionFunction(self, exampleIndex, classifierWeight, classifierSummation, boostedClassifiers):
+    def _evaluationFunction(self, exampleIndex, boostedClassifiers):
         result = 0.0
+        classifierSummation = self._totalClassifierWeightSummation()
         for bclf in boostedClassifiers:
-            result = result + (classifierWeight / classifierSummation) * float(bclf.targetOutputPairs[exampleIndex][1])
+            result = result + (bclf.classifierWeight / classifierSummation) * float(bclf.targetOutputPairs[exampleIndex][1])
         return result
 
     def _totalClassifierWeightSummation(self):
