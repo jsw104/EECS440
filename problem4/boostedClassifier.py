@@ -24,7 +24,7 @@ class BoostedClassifierManager:
 
     def _createBoostedClassifier(self):
        if self.learning_alg == 'DTREE':
-            return BoostedClassifier(DTree(self.schema, maxDepth=1, useInformationGain=False))
+            return BoostedClassifier(DTree(self.schema, maxDepth=1, useInformationGain=True))
        elif self.learning_alg == 'ANN':
             return BoostedClassifier(NeuralNetwork([1], self.numInputs, weightDecayCoeff=0, maxTrainingIterations=-1))
        elif self.learning_alg == 'NBAYES':
@@ -96,7 +96,16 @@ class BoostedClassifierManager:
         result = 0.0
         classifierSummation = self._totalClassifierWeightSummation()
         for bclf in boostedClassifiers:
-            result = result + (bclf.classifierWeight / classifierSummation) * float(bclf.targetOutputPairs[exampleIndex][1])
+            plusminusOne = -1.0
+            if float(bclf.targetOutputPairs[exampleIndex][1]) >= 0.5:
+                plusminusOne = 1.0
+            result = result + (bclf.classifierWeight / classifierSummation) * plusminusOne
+        
+        if result > 0:
+            result = 1
+        else:
+            result = 0
+        
         return result
 
     def _totalClassifierWeightSummation(self):

@@ -57,6 +57,9 @@ else:
 for i in range(0, len(trainingSets)):
     trainingExamples = trainingSets[i]
     testExamples = testSets[i]
+    exampleNormalizer.resetWeights(trainingExamples)
+    exampleNormalizer.resetWeights(testExamples)
+    
     if useCrossValidation:
         print 'Processing Fold ' + str(i + 1)
 

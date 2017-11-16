@@ -59,7 +59,7 @@ def majority_class(examples):
     for example in examples:
         if example.target not in classCounter:
             classCounter[example.target] = 0
-        classCounter[example.target] = classCounter[example.target] + 1
+        classCounter[example.target] = classCounter[example.target] + example.weight
             
     majorityClass = None
     majorityClassCount = 0
