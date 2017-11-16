@@ -52,9 +52,9 @@ class ExampleNormalizer:
     def normalizeExamples(self, exampleSet):
         normalizedExamples = []
         for example in exampleSet.examples:
-            normalizedExamples.append(NormalizedExample(example, exampleSet.schema, self.nominalAttributeHashes, self.continuousAttributeHash, 1.0, self.learning_alg))
+            normalizedExamples.append(NormalizedExample(example, exampleSet.schema, self.nominalAttributeHashes, self.continuousAttributeHash, 1.0 / len(exampleSet.examples), self.learning_alg))
         return normalizedExamples
     
     def resetWeights(self, normalizedExamples):
         for normalizedExample in normalizedExamples:
-            normalizedExample.weight = 1.0
+            normalizedExample.weight = 1.0 / len(normalizedExamples)
