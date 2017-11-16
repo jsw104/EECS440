@@ -52,6 +52,8 @@ class BoostedClassifierManager:
                 exponentSign = -1.0
             exponent = classifierWeight * exponentSign
             newWeight = examples[exampleIndex].weight * math.exp(exponent)
+            #if exampleIndex < 10:
+            #    print examples[exampleIndex].weight, newWeight
             examples[exampleIndex].weight = newWeight
             newWeightSummation = newWeightSummation + newWeight
 

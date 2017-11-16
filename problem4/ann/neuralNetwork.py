@@ -17,7 +17,7 @@ class NeuralNetwork:
         self.maxTrainingIterations = maxTrainingIterations #-1 => always train until convergence
         self.learningRate = 0.01                
 
-    def _train(self, inputs, targets):
+    def _train(self, inputs, targets, weight=1.0):
         layerIndex = 0
         layerInputs = []
         layerActivationDerivs = []
@@ -31,7 +31,7 @@ class NeuralNetwork:
             else:
                 break      
                 
-        errors = layerInputs[layerIndex+1] - targets 
+        errors = (layerInputs[layerIndex+1] - targets) * weight
         downstreamBiasSensitivities = errors     #might need to transpose this if we have multiple outputs
         downstreamWeights = np.ones(len(errors)) #might need to transpose this if we have multiple outputs
         while layerIndex >= 0:
@@ -60,7 +60,7 @@ class NeuralNetwork:
                     layer.weights = (1 - 2*self.weightDecayCoeff*self.learningRate) * layer.weights
                 
             for example in trainingExamples:
-                self._train(example.inputs, example.target)  
+                self._train(example.inputs, example.target, example.weight*len(trainingExamples))  
             
             allLayersConverged = True
             for i in range(0,len(self.layers)):

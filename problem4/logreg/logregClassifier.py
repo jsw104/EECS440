@@ -33,7 +33,6 @@ class LogRegClassifier():
             absDiffBias = abs(self.bias - initialBias)
             maxAbsDiffWeights = np.max(np.abs(self.weights - initialWeights))
             iterationCtr = iterationCtr + 1
-        #print 'converged in', iterationCtr, 'iterations', 'with norm', np.sqrt(self.weights.dot(self.weights)) 
             
     def evaluateExamples(self, testExamples):
         tp = 0
@@ -61,10 +60,10 @@ class LogRegClassifier():
                         
             magnitudeWeightsSquared = self.weights.dot(self.weights) + self.bias*self.bias
             magnitudeWeights = np.sqrt(magnitudeWeightsSquared)
-            error = (output - example.target) + 0.5 * self.const_lambda * magnitudeWeightsSquared
+            error = len(trainingExamples) * example.weight * (output - example.target)
             
-            dE_dBias = sigmoid_deriv * (output - example.target) + self.const_lambda * magnitudeWeights * 2 * self.bias * (0.5 * self.const_lambda * magnitudeWeightsSquared)
-            dE_dWeights = sigmoid_deriv * (output - example.target) * example.inputs + self.const_lambda * magnitudeWeights * 2 * self.weights * (0.5 * self.const_lambda * magnitudeWeightsSquared)   
+            dE_dBias = sigmoid_deriv * error + self.const_lambda * magnitudeWeights * 2 * self.bias * (0.5 * self.const_lambda * magnitudeWeightsSquared)
+            dE_dWeights = sigmoid_deriv * error * example.inputs + self.const_lambda * magnitudeWeights * 2 * self.weights * (0.5 * self.const_lambda * magnitudeWeightsSquared)   
     
             self.bias = self.bias - (self.learningRate * dE_dBias)
             self.weights = self.weights - (self.learningRate * dE_dWeights)
