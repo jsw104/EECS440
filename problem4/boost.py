@@ -84,6 +84,7 @@ avgRecall = np.mean(recalls)
 stdRecall = np.std(recalls)
 aroc = computePooledAROC(listsTargetOutputPairs)
 
+print 'Accuracies', accuracies
 print 'Accuracy: ' + str(avgAccuracy) + ' ' + str(stdAccuracy)
 print 'Precision: ' + str(avgPrecision) + ' ' + str(stdPrecision)
 print 'Recall: ' + str(avgRecall) + ' ' + str(stdRecall)
