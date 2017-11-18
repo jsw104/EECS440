@@ -22,11 +22,11 @@ class LogRegClassifier():
         deriv = output * (1-output)
         return output, deriv
         
-    def train(self, trainingExamples):
+    def train(self, trainingExamples, maxIter=1000):
         absDiffBias = 1
         maxAbsDiffWeights = 1
         iterationCtr = 0
-        while absDiffBias > 0.015 or maxAbsDiffWeights > 0.015:
+        while iterationCtr < maxIter and (absDiffBias > 0.015 or maxAbsDiffWeights > 0.015):
             initialBias = self.bias
             initialWeights = self.weights
             self._trainingIteration(trainingExamples)

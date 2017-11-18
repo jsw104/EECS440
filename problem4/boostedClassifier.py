@@ -39,10 +39,19 @@ class BoostedClassifierManager:
             self.boostedClassifiers.append(boostedClf)
             clf = boostedClf.classifier
             clf.train(trainingExamples)
+            
             tp, tn, fp, fn, trainingTargetOutputPairs = clf.evaluateExamples(trainingExamples)
-            boostedClf.roundOutputs(trainingTargetOutputPairs) #rounding makes outputs equal to the classifier guess
-            boostedClf.setNewClassifierWeight(trainingExamples, trainingTargetOutputPairs)
+            boostedClf.roundOutputs(trainingTargetOutputPairs)
+            weightedTrainingError = boostedClf.calculateWeightedTrainingError(trainingExamples, trainingTargetOutputPairs) 
+            boostedClf.setNewClassifierWeight(trainingExamples, trainingTargetOutputPairs, weightedTrainingError)           
             self._updateWeights(trainingExamples, trainingTargetOutputPairs, boostedClf.classifierWeight)
+            
+            print 'iter', i, 'weightedTrainingErr', weightedTrainingError
+            
+            if weightedTrainingError == 0 or weightedTrainingError >= 0.5:
+                print 'break on iter', i
+                break
+                
 
     def _updateWeights(self, examples, targetOutputPairs, classifierWeight):
         newWeightSummation = 0.0
@@ -52,8 +61,6 @@ class BoostedClassifierManager:
                 exponentSign = -1.0
             exponent = classifierWeight * exponentSign
             newWeight = examples[exampleIndex].weight * math.exp(exponent)
-            #if exampleIndex < 10:
-            #    print examples[exampleIndex].weight, newWeight
             examples[exampleIndex].weight = newWeight
             newWeightSummation = newWeightSummation + newWeight
 
@@ -126,17 +133,19 @@ class BoostedClassifier:
         for targetOutputPair in targetOutputPairs:
             targetOutputPair[1] = round(targetOutputPair[1])
 
-    def _calculateWeightedTrainingError(self, testingExamples, targetOutputPairs):
+    def calculateWeightedTrainingError(self, examples, targetOutputPairs):
         weightedTrainingError = 0.0
         for i in range(0, len(targetOutputPairs)):
-            weightedTrainingError = weightedTrainingError + testingExamples[i].weight * (targetOutputPairs[i][0] != targetOutputPairs[i][1])
+            weightedTrainingError = weightedTrainingError + examples[i].weight * (targetOutputPairs[i][0] != targetOutputPairs[i][1])
         if weightedTrainingError <= 0 or weightedTrainingError >= 0.5:
             print 'we have converged'
         return weightedTrainingError
 
-    def setNewClassifierWeight(self, examples, targetOutputPairs):
-        weightedTrainingError = self._calculateWeightedTrainingError(examples, targetOutputPairs)
-        self.classifierWeight = 0.5 * math.log((1-weightedTrainingError)/weightedTrainingError)
+    def setNewClassifierWeight(self, examples, targetOutputPairs, weightedTrainingError):
+        if weightedTrainingError == 0:
+            self.classifierWeight = 1 #COME BACK TO THIS           
+        else:
+            self.classifierWeight = 0.5 * math.log((1-weightedTrainingError)/weightedTrainingError)
 
     def setTargetOutputPairs(self, examples):
         tp, fp, tn, fn, targetOutputPairs = self.classifier.evaluateExamples(examples)
