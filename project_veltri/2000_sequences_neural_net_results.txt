@@ -1,0 +1,159 @@
+imported examples
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=10.csv
+ann_layer_config: (10, 10)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.953037318876 stddev 0.0197298316105
+avg_frac_fully_correct 0.821973393422 stddev 0.084533821253
+avg_util_loss 0.0382745271393 stddev 0.0284015630605
+avg_predict_time 0.0012390980581 stddev 6.37199115433e-05
+avg_exhaustive_optimization_time 0.345545988452 stddev 0.0683820926479
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=10.csv
+ann_layer_config: (50, 50)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.957570930471 stddev 0.00164941006245
+avg_frac_fully_correct 0.880251619477 stddev 0.00315587727957
+avg_util_loss 0.0199964673562 stddev 0.00132409230445
+avg_predict_time 0.00435163631392 stddev 6.75693784421e-05
+avg_exhaustive_optimization_time 0.346925366911 stddev 0.0496076266577
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=10.csv
+ann_layer_config: (250, 250)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.969162745977 stddev 0.00226274613852
+avg_frac_fully_correct 0.903666810625 stddev 0.0062863217145
+avg_util_loss 0.0142091399134 stddev 0.00132815364011
+avg_predict_time 0.0200404008337 stddev 0.0020979382309
+avg_exhaustive_optimization_time 0.336952652908 stddev 0.0752344775762
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=10.csv
+ann_layer_config: (500, 500)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.97206336756 stddev 0.00239263768574
+avg_frac_fully_correct 0.909095539769 stddev 0.00531174291005
+avg_util_loss 0.0139492848656 stddev 0.000523868856137
+avg_predict_time 0.0499523315165 stddev 0.00314897379721
+avg_exhaustive_optimization_time 0.418182505563 stddev 0.0372695922241
+imported examples
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=15.csv
+ann_layer_config: (10, 10)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.953015285807 stddev 0.00605571962464
+avg_frac_fully_correct 0.75445873114 stddev 0.0353872488774
+avg_util_loss 0.0417558399499 stddev 0.00685622528015
+avg_predict_time 0.00152993790601 stddev 3.46506205884e-05
+avg_exhaustive_optimization_time 0.852215783815 stddev 0.0837185132969
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=15.csv
+ann_layer_config: (50, 50)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.947419599482 stddev 0.00416886138906
+avg_frac_fully_correct 0.788265465566 stddev 0.0135533260598
+avg_util_loss 0.0302821704992 stddev 0.00218108838391
+avg_predict_time 0.00461947697329 stddev 0.000399025872388
+avg_exhaustive_optimization_time 0.866536098076 stddev 0.051470630677
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=15.csv
+ann_layer_config: (250, 250)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.961608088993 stddev 0.00313772446009
+avg_frac_fully_correct 0.83701239522 stddev 0.00858646515572
+avg_util_loss 0.0229261033935 stddev 0.00132355761509
+avg_predict_time 0.0223650012208 stddev 0.00101567291612
+avg_exhaustive_optimization_time 0.859112548372 stddev 0.113529798091
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=15.csv
+ann_layer_config: (500, 500)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.96460966612 stddev 0.00237324806692
+avg_frac_fully_correct 0.847621669932 stddev 0.00739907845013
+avg_util_loss 0.0227194966422 stddev 0.00109950074055
+avg_predict_time 0.0494535204668 stddev 0.00621997779848
+avg_exhaustive_optimization_time 0.899143311697 stddev 0.169804169776
+imported examples
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=30.csv
+ann_layer_config: (10, 10)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.957861833997 stddev 0.00511047160717
+avg_frac_fully_correct 0.573876204742 stddev 0.0643999363895
+avg_util_loss 0.0638729674159 stddev 0.0088121038961
+avg_predict_time 0.00225965516891 stddev 0.000201521698999
+avg_exhaustive_optimization_time 4.40442772993 stddev 0.224186977949
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=30.csv
+ann_layer_config: (50, 50)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.952985842632 stddev 0.00248197789663
+avg_frac_fully_correct 0.68435762754 stddev 0.00448300033211
+avg_util_loss 0.0406069915895 stddev 0.00230510690576
+avg_predict_time 0.00610011948554 stddev 0.000324036112888
+avg_exhaustive_optimization_time 4.71923537069 stddev 0.0786376712913
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=30.csv
+ann_layer_config: (250, 250)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.961429977272 stddev 0.00156201362039
+avg_frac_fully_correct 0.713488352373 stddev 0.00801554714963
+avg_util_loss 0.037106141646 stddev 0.000937443352219
+avg_predict_time 0.0248098791681 stddev 0.00216285725495
+avg_exhaustive_optimization_time 4.51441568978 stddev 0.619728499745
+==================================================================================
+file: examples_numSequences=2000_sequenceLength=250_numStages=30.csv
+ann_layer_config: (500, 500)
+***processing fold 1
+***processing fold 2
+***processing fold 3
+***processing fold 4
+***processing fold 5
+avg_frac_correct 0.966324450192 stddev 0.00122922216531
+avg_frac_fully_correct 0.739171083479 stddev 0.00590605149514
+avg_util_loss 0.0344718476396 stddev 0.00112623863996
+avg_predict_time 0.0293941171582 stddev 0.00656075311586
+avg_exhaustive_optimization_time 2.22515282635 stddev 0.540720573545
