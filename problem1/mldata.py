@@ -277,6 +277,8 @@ def parse_c45(file_base, rootdir='.'):
 
     """
     schema_name = file_base + _NAMES_EXT
+    print schema_name
+    print rootdir
     schema_filename = _find_file(schema_name, rootdir)
     if schema_filename is None:
         raise ValueError('Schema file not found')

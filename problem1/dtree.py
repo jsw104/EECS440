@@ -7,6 +7,7 @@ from internalnode import *
 from continiousAttributeSplitFinder import *
 from leafnode import *
 import random
+from Queue import *
 
 class DTree:
 
@@ -44,6 +45,7 @@ class DTree:
                         trainingExamples = trainingExamples + foldArray[j]
                 foldTreeRootNode = self.createRootNode(trainingExamples)
                 self.accuracy = self.accuracy + self.evaluateExamples(foldTreeRootNode, testExamples)
+                self.printTree(foldTreeRootNode)
             self.accuracy = self.accuracy/len(foldArray)
             
         else:
@@ -67,12 +69,31 @@ class DTree:
         overallMajorityClass, overallMajorityClassFraction = entropy.majority_class(trainingExamples)
         return self._buildTree(trainingExamples, self.schema, possibleNodes, self.maxDepth, overallMajorityClass)
 
+    def printTree(self, rootNode):
+        q = Queue(maxsize=0)
+        next_level = 1
+        q.put([rootNode, next_level])
+        while (q.empty() is not True):
+            n = q.get()
+            if next_level == n[1]:
+                next_level = next_level + 1
+                print "\n"
+            if isinstance(n[0], LeafNode):
+                print str(n[0].classLabel) + "(count:" + str(n[0].evaluationCount) + ")" + "      ",
+                continue
+            else:
+                print n[0].schema.features[n[0].featureIndex].name + "(count:" + str(n[0].evaluationCount) + "boundary:" + str(n[0].boundaryValue) + ")" + "      ",
+            for childNode in n[0].children.itervalues():
+                q.put([childNode, n[1] + 1])
+
+
     def evaluateExamples(self, rootNode, examples):
         numCorrect = 0
         for example in examples:
             node = rootNode
             while hasattr(node, 'children'):
                 featureValue = example.features[node.featureIndex]
+                node.incrementEvaluationCount()
                 if node.featureType == Feature.Type.BINARY or node.featureType == Feature.Type.NOMINAL:
                     node = node.children[featureValue]
                 
@@ -81,7 +102,7 @@ class DTree:
                         node = node.children['>=']
                     else:
                         node = node.children['<']
-            
+            node.incrementEvaluationCount()
             if example.features[-1] == node.classLabel:
                 numCorrect = numCorrect + 1
         
@@ -252,3 +273,4 @@ countInternalNodes, countLeafNodes = dtree.countNodes()
 print 'Size: ' + str(countInternalNodes) #Not counting leaf nodes
 print 'Maximum Depth: ' + str(dtree.findMaxDepth())
 print 'First Feature: ' + str(dtree.getFirstFeatureName())
+dtree.printTree()

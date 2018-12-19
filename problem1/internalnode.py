@@ -12,9 +12,13 @@ class InternalNode:
         self.featureType = self.schema.features[self.featureIndex].type
         self.boundaryValue = None
         self.children = {}
+        self.evaluationCount = 0
     
     def setParent(self, parent):
         self.parent = parent
+
+    def incrementEvaluationCount(self):
+        self.evaluationCount = self.evaluationCount + 1
         
     def addChild(self, childNode, key):
         if key in self.children.keys():
